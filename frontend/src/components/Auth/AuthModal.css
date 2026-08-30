@@ -1,0 +1,397 @@
+/* ================================================================
+   AuthModal.css — styles for the Auth Modal component
+   Mirrors the design from auth-module(1).html
+   ================================================================ */
+
+/* ---------- Overlay ---------- */
+.am-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 26, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: am-fade-in 0.18s ease;
+}
+
+@keyframes am-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---------- Modal shell ---------- */
+.am-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  animation: am-slide-up 0.22s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes am-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Header ---------- */
+.am-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.am-head h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.am-head p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #64748b;
+}
+
+.am-back {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 0.35rem;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.am-back:hover { text-decoration: underline; }
+
+.am-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+
+.am-close:hover { background: #f1f5f9; color: #0f172a; }
+
+/* ---------- Body ---------- */
+.am-body {
+  padding: 1.5rem;
+  flex: 1;
+}
+
+/* ---------- Category grid ---------- */
+.am-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.am-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.1rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  font-size: 0.88rem;
+}
+
+.am-category-card:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.am-category-card b {
+  display: block;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.am-category-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  border-radius: 10px;
+  color: #2563eb;
+}
+
+.am-category-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.am-category-blurb {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* ---------- Government role list ---------- */
+.am-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.am-role-list-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+
+.am-role-list-card:hover,
+.am-role-list-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.am-role-list-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.am-role-list-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.am-role-list-text b {
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.am-role-list-text span {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* ---------- Role summary bar (inside form) ---------- */
+.am-role-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.87rem;
+}
+
+.am-role-icon { font-size: 1.3rem; }
+
+.am-role-info { flex: 1; }
+.am-role-info b { display: block; color: #1d4ed8; font-size: 0.88rem; }
+
+.am-role-summary a {
+  color: #2563eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.am-role-summary a:hover { text-decoration: underline; }
+
+/* ---------- Form fields ---------- */
+.am-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.am-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.am-field input {
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #0f172a;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.am-field input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.am-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* ---------- Error / notice ---------- */
+.am-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.83rem;
+  padding: 0.55rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.am-notice {
+  font-size: 0.8rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-left: 3px solid #2563eb;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ---------- Hints ---------- */
+.am-hint {
+  font-size: 0.82rem;
+  color: #64748b;
+  text-align: center;
+  margin-top: 0.75rem;
+}
+
+.am-hint a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+.am-hint a:hover { text-decoration: underline; }
+
+.am-hint-muted {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 0.6rem;
+}
+
+/* ---------- Pending state ---------- */
+.am-pending {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.am-pending-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.am-pending p {
+  font-size: 0.9rem;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.am-pending-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.am-pending-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.84rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #f0f2f5;
+  color: #374151;
+}
+
+.am-pending-row:last-child { border-bottom: none; }
+
+.am-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+.btn-primary:hover { background: #1d4ed8; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+
+.btn-block {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .am-modal { border-radius: 12px; }
+  .am-category-grid { grid-template-columns: 1fr; }
+  .am-field-row { grid-template-columns: 1fr; }
+  .am-head, .am-body { padding: 1.1rem; }
+}
