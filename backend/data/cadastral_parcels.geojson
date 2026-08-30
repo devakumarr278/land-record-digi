@@ -1,0 +1,341 @@
+{
+  "type": "FeatureCollection",
+  "name": "TamilNadu_Cadastral_Parcels",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-CBE-KOV-145-2",
+        "surveyNumber": "145/2",
+        "subDivision": "2",
+        "district": "Coimbatore",
+        "taluk": "Coimbatore North",
+        "village": "Kovilpalayam",
+        "ownerName": "Ramasamy Gounder",
+        "fatherName": "Marappa Gounder",
+        "officialAreaSqm": 8579.34,
+        "officialAreaAcres": 2.12,
+        "classification": "Ryotwari Nanjai (Wet Land)",
+        "pattaNumber": "1042",
+        "northBoundary": "Survey No. 145/1 and Cart Track",
+        "southBoundary": "Survey No 145/3 Senthil Land",
+        "eastBoundary": "Kovilpalayam Water Channel",
+        "westBoundary": "Survey No 144 Odai Poramboke"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.012100, 11.145150],
+            [77.013047, 11.145150],
+            [77.013047, 11.144400],
+            [77.012100, 11.144400],
+            [77.012100, 11.145150]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-CBE-KOV-145-1",
+        "surveyNumber": "145/1",
+        "subDivision": "1",
+        "district": "Coimbatore",
+        "taluk": "Coimbatore North",
+        "village": "Kovilpalayam",
+        "ownerName": "Subramanian Gounder",
+        "fatherName": "Marappa Gounder",
+        "officialAreaSqm": 4046.86,
+        "officialAreaAcres": 1.00,
+        "classification": "Ryotwari Punjai",
+        "pattaNumber": "1041",
+        "northBoundary": "Village Cart Track",
+        "southBoundary": "Survey No. 145/2 Ramasamy Land",
+        "eastBoundary": "Kovilpalayam Water Channel",
+        "westBoundary": "Survey No 144 Odai Poramboke"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.012100, 11.145800],
+            [77.013050, 11.145800],
+            [77.013050, 11.145200],
+            [77.012100, 11.145200],
+            [77.012100, 11.145800]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-CBE-KOV-145-3",
+        "surveyNumber": "145/3",
+        "subDivision": "3",
+        "district": "Coimbatore",
+        "taluk": "Coimbatore North",
+        "village": "Kovilpalayam",
+        "ownerName": "Senthilkumar M.",
+        "fatherName": "Muthusamy",
+        "officialAreaSqm": 6070.29,
+        "officialAreaAcres": 1.50,
+        "classification": "Ryotwari Punjai",
+        "pattaNumber": "1043",
+        "northBoundary": "Survey No. 145/2 Ramasamy Land",
+        "southBoundary": "Survey No 145/4 Palanisamy Land",
+        "eastBoundary": "Kovilpalayam Water Channel",
+        "westBoundary": "Survey No 144 Odai Poramboke"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.012100, 11.144400],
+            [77.013050, 11.144400],
+            [77.013050, 11.143800],
+            [77.012100, 11.143800],
+            [77.012100, 11.144400]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-CBE-KOV-144-1",
+        "surveyNumber": "144",
+        "subDivision": "1",
+        "district": "Coimbatore",
+        "taluk": "Coimbatore North",
+        "village": "Kovilpalayam",
+        "ownerName": "Government of Tamil Nadu",
+        "officialAreaSqm": 12140.57,
+        "officialAreaAcres": 3.00,
+        "classification": "Water Channel Poramboke",
+        "pattaNumber": "GOV-01",
+        "northBoundary": "Survey No. 143",
+        "southBoundary": "Survey No. 148",
+        "eastBoundary": "Survey No. 145/1, 145/2, 145/3",
+        "westBoundary": "Survey No. 142 Private Land"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.011200, 11.146000],
+            [77.012100, 11.146000],
+            [77.012100, 11.143500],
+            [77.011200, 11.143500],
+            [77.011200, 11.146000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-CBE-ANN-88-1",
+        "surveyNumber": "88/1",
+        "subDivision": "1",
+        "district": "Coimbatore",
+        "taluk": "Annur",
+        "village": "Kunnathur",
+        "ownerName": "Natarajan P.",
+        "fatherName": "Periyasamy",
+        "officialAreaSqm": 10117.14,
+        "officialAreaAcres": 2.50,
+        "classification": "Ryotwari Nanjai",
+        "pattaNumber": "402",
+        "northBoundary": "Survey No. 87 Lake Bund",
+        "southBoundary": "Survey No. 88/2",
+        "eastBoundary": "Annur Road",
+        "westBoundary": "Survey No. 86"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.100000, 11.230000],
+            [77.101200, 11.230000],
+            [77.101200, 11.229000],
+            [77.100000, 11.229000],
+            [77.100000, 11.230000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-TPR-AVI-210-4",
+        "surveyNumber": "210/4",
+        "subDivision": "4",
+        "district": "Tiruppur",
+        "taluk": "Avinashi",
+        "village": "Thirumuruganpoondi",
+        "ownerName": "Murugesan K.",
+        "fatherName": "Kandasamy",
+        "officialAreaSqm": 4856.23,
+        "officialAreaAcres": 1.20,
+        "classification": "Commercial Industrial",
+        "pattaNumber": "890",
+        "northBoundary": "Survey No. 210/3",
+        "southBoundary": "Avinashi Main Road",
+        "eastBoundary": "Survey No. 211",
+        "westBoundary": "Survey No. 209"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.300000, 11.160000],
+            [77.300800, 11.160000],
+            [77.300800, 11.159300],
+            [77.300000, 11.159300],
+            [77.300000, 11.160000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-POL-ANA-32-A",
+        "surveyNumber": "32/A",
+        "subDivision": "A",
+        "district": "Coimbatore",
+        "taluk": "Pollachi",
+        "village": "Anaimalai",
+        "ownerName": "Chinnasamy V.",
+        "fatherName": "Velusamy",
+        "officialAreaSqm": 16187.42,
+        "officialAreaAcres": 4.00,
+        "classification": "Coconut Plantation (Thottam)",
+        "pattaNumber": "512",
+        "northBoundary": "Aliyar River Canal",
+        "southBoundary": "Survey No. 33",
+        "eastBoundary": "Survey No. 32/B",
+        "westBoundary": "Forest Boundary"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [76.920000, 10.580000],
+            [76.921500, 10.580000],
+            [76.921500, 10.578500],
+            [76.920000, 10.578500],
+            [76.920000, 10.580000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-SLM-ATT-102-1",
+        "surveyNumber": "102/1",
+        "subDivision": "1",
+        "district": "Salem",
+        "taluk": "Attur",
+        "village": "Peddanaickenpalayam",
+        "ownerName": "Lakshmi Narayanan",
+        "fatherName": "Srinivasan",
+        "officialAreaSqm": 7284.34,
+        "officialAreaAcres": 1.80,
+        "classification": "Ryotwari Punjai",
+        "pattaNumber": "721",
+        "northBoundary": "Survey No. 101",
+        "southBoundary": "Cart Road",
+        "eastBoundary": "Survey No. 102/2",
+        "westBoundary": "Survey No. 100"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [78.500000, 11.600000],
+            [78.501000, 11.600000],
+            [78.501000, 11.599000],
+            [78.500000, 11.599000],
+            [78.500000, 11.600000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-MDU-MEL-55-2",
+        "surveyNumber": "55/2",
+        "subDivision": "2",
+        "district": "Madurai",
+        "taluk": "Melur",
+        "village": "Navinipatti",
+        "ownerName": "Alagarsamy Thevar",
+        "fatherName": "Karuppan",
+        "officialAreaSqm": 8093.71,
+        "officialAreaAcres": 2.00,
+        "classification": "Ryotwari Nanjai",
+        "pattaNumber": "334",
+        "northBoundary": "Periyar Main Canal",
+        "southBoundary": "Survey No. 55/3",
+        "eastBoundary": "Village Pathway",
+        "westBoundary": "Survey No. 54"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [78.330000, 10.030000],
+            [78.331200, 10.030000],
+            [78.331200, 10.029000],
+            [78.330000, 10.029000],
+            [78.330000, 10.030000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcelId": "TN-TVR-MAN-19-1",
+        "surveyNumber": "19/1",
+        "subDivision": "1",
+        "district": "Thiruvarur",
+        "taluk": "Mannargudi",
+        "village": "Serankulam",
+        "ownerName": "Rengasamy Pillai",
+        "fatherName": "Thangavel",
+        "officialAreaSqm": 14163.99,
+        "officialAreaAcres": 3.50,
+        "classification": "Cauvery Delta Wet Land",
+        "pattaNumber": "601",
+        "northBoundary": "Vennar River Branch",
+        "southBoundary": "Survey No. 19/2",
+        "eastBoundary": "Survey No. 20",
+        "westBoundary": "Paddy Field Channel"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [79.440000, 10.660000],
+            [79.441500, 10.660000],
+            [79.441500, 10.658500],
+            [79.440000, 10.658500],
+            [79.440000, 10.660000]
+          ]
+        ]
+      }
+    }
+  ]
+}
