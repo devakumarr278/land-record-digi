@@ -3,7 +3,8 @@ import {
   LayoutDashboard, Search, History, Link2, ShieldAlert, FileBarChart,
   Settings as SettingsIcon, LogOut, ChevronsLeft, ChevronsRight,
   ShieldCheck, AlertTriangle, UserCog, CheckCircle2, XCircle, MapPin,
-  Download, Filter, ChevronRight, Hash, Lock, X, Loader2, Eye, Clock
+  Download, Filter, ChevronRight, Hash, Lock, X, Loader2, Eye, Clock,
+  FileSearch
 } from 'lucide-react';
 
 /* =========================================================================
@@ -21,13 +22,30 @@ const AUDIT_EVENTS = [
   { t: '9:22 AM', role: 'Tehsildar', user: 'R. Subramaniam', action: 'approved Mutation record', doc: 'LR-1004', tone: 'green' },
 ];
 
+// Decision Provenance — every case where a human overruled / corrected the AI.
+// `evidence` is the source document the officer checked against, `officerId`
+// is the internal ID stamped on the decision record.
 const DECISIONS = [
-  { doc: 'LR-1017', field: 'Owner Name', role: 'Verification Officer', user: 'Karthik S', from: 'RAVI KUAMR', to: 'RAVI KUMAR', reason: 'OCR misread — corrected against original scan', t: '9:54 AM', date: '30 Aug 2026' },
-  { doc: 'LR-1021', field: 'Area', role: 'Tehsildar', user: 'S. Iyer', from: '2.50 Aores', to: '2.50 Acres', reason: 'AI confidence below threshold (43%) — manual verification against register', t: '9:12 AM', date: '30 Aug 2026' },
-  { doc: 'LR-1012', field: 'Ownership Transfer', role: 'Tehsildar', user: 'S. Iyer', from: 'Pending', to: 'Rejected', reason: 'Supporting sale deed did not match claimant identity', t: '10:19 AM', date: '30 Aug 2026' },
-  { doc: 'LR-0988', field: 'Khata No', role: 'District Admin', user: 'K. Prakash', from: '441', to: '458', reason: 'Cross-checked against legacy archive volume 12', t: '4:03 PM', date: '29 Aug 2026' },
-  { doc: 'LR-0975', field: 'Classification', role: 'Verification Officer', user: 'Deepa N', from: 'Residential', to: 'Agricultural', reason: 'Field visit confirmed land use mismatch', t: '2:47 PM', date: '29 Aug 2026' },
+  { doc: 'LR-1017', field: 'Owner Name', role: 'Verification Officer', user: 'Karthik S', officerId: 'OFC-1042', from: 'RAVI KUAMR', to: 'RAVI KUMAR', reason: 'OCR misread — corrected against original scan', evidence: 'Mutation-2010.pdf', t: '9:54 AM', date: '30 Aug 2026' },
+  { doc: 'LR-1021', field: 'Area', role: 'Tehsildar', user: 'S. Iyer', officerId: 'OFC-1008', from: '2.50 Aores', to: '2.50 Acres', reason: 'AI confidence below threshold (43%) — manual verification against register', evidence: 'Survey_Register_Vol4.pdf', t: '9:12 AM', date: '30 Aug 2026' },
+  { doc: 'LR-1012', field: 'Ownership Transfer', role: 'Tehsildar', user: 'S. Iyer', officerId: 'OFC-1008', from: 'Pending', to: 'Rejected', reason: 'Supporting sale deed did not match claimant identity', evidence: 'sale_deed_1012.pdf', t: '10:19 AM', date: '30 Aug 2026' },
+  { doc: 'LR-0988', field: 'Khata No', role: 'District Admin', user: 'K. Prakash', officerId: 'OFC-1001', from: '441', to: '458', reason: 'Cross-checked against legacy archive volume 12', evidence: 'legacy_archive_vol12.pdf', t: '4:03 PM', date: '29 Aug 2026' },
+  { doc: 'LR-0975', field: 'Classification', role: 'Verification Officer', user: 'Deepa N', officerId: 'OFC-1055', from: 'Residential', to: 'Agricultural', reason: 'Field visit confirmed land use mismatch', evidence: 'field_visit_report_0975.pdf', t: '2:47 PM', date: '29 Aug 2026' },
 ];
+
+// Document Provenance — where every extracted value came from:
+// Document → Page → Region → OCR/HTR → Extracted Value → Field → Confidence → Model
+const DOCUMENT_PROVENANCE = {
+  'LR-1017': { page: 4, region: 'Owner field — row 3, left column', coords: { x: 14, y: 52, w: 34, h: 8 }, ocrEngine: 'HTR-v2.1 (handwritten)', field: 'Owner Name', rawValue: 'RAVI KUAMR', confidence: 43, model: 'ExtractNet-v3', extractedAt: '9:04 AM', sourceFile: 'scan_1017_04.jpg' },
+  'LR-1021': { page: 2, region: 'Survey table — Area column, row 7', coords: { x: 55, y: 28, w: 30, h: 6 }, ocrEngine: 'OCR-v2.1 (printed)', field: 'Area', rawValue: '2.50 Aores', confidence: 51, model: 'ExtractNet-v3', extractedAt: '8:47 AM', sourceFile: 'scan_1021_02.jpg' },
+  'LR-1012': { page: 1, region: 'Transfer clause — paragraph 2', coords: { x: 10, y: 62, w: 72, h: 10 }, ocrEngine: 'OCR-v2.1 (printed)', field: 'Ownership Transfer', rawValue: 'Pending', confidence: 88, model: 'ExtractNet-v3', extractedAt: '9:58 AM', sourceFile: 'sale_deed_1012.pdf' },
+  'LR-0988': { page: 6, region: 'Khata register — column 3', coords: { x: 40, y: 18, w: 22, h: 6 }, ocrEngine: 'HTR-v2.0 (handwritten)', field: 'Khata No', rawValue: '441', confidence: 39, model: 'ExtractNet-v2', extractedAt: '3:40 PM · 29 Aug', sourceFile: 'legacy_vol12_p6.jpg' },
+  'LR-0975': { page: 3, region: 'Land-use classification box', coords: { x: 20, y: 42, w: 38, h: 6 }, ocrEngine: 'OCR-v2.1 (printed)', field: 'Classification', rawValue: 'Residential', confidence: 67, model: 'ExtractNet-v3', extractedAt: '1:58 PM · 29 Aug', sourceFile: 'field_visit_0975.jpg' },
+  'LR-1044': { page: 1, region: 'Header block', coords: { x: 20, y: 8, w: 60, h: 8 }, ocrEngine: 'OCR-v2.1 (printed)', field: 'Survey Number', rawValue: '1044/A', confidence: 96, model: 'ExtractNet-v3', extractedAt: '10:38 AM', sourceFile: 'scan_1044_01.jpg' },
+  'LR-1039': { page: 2, region: 'Case assignment note (system)', coords: { x: 12, y: 70, w: 50, h: 6 }, ocrEngine: '—', field: 'Assigned Officer', rawValue: '—', confidence: null, model: '—', extractedAt: '10:31 AM', sourceFile: '—' },
+  'LR-1009': { page: 1, region: 'Full-page auto-validation', coords: { x: 8, y: 8, w: 84, h: 84 }, ocrEngine: 'OCR-v2.1 (printed)', field: 'All Fields', rawValue: '—', confidence: 92, model: 'ExtractNet-v3', extractedAt: '9:41 AM', sourceFile: 'scan_1009_01.jpg' },
+  'LR-1004': { page: 1, region: 'Mutation record header', coords: { x: 15, y: 10, w: 60, h: 8 }, ocrEngine: 'OCR-v2.1 (printed)', field: 'Mutation Type', rawValue: 'Sale', confidence: 94, model: 'ExtractNet-v3', extractedAt: '9:15 AM', sourceFile: 'mutation_1004.pdf' },
+};
 
 const CHAIN_BLOCKS = [
   { id: 'B-88231', doc: 'LR-1021', hash: '7a3f9e...c02d', prev: '4b1c88...7f11', t: '10:42 AM' },
@@ -77,6 +95,60 @@ function docTrail(docId) {
   ];
 }
 
+function getProvenance(docId) {
+  return DOCUMENT_PROVENANCE[docId] || null;
+}
+
+function getDecisionFor(docId) {
+  return DECISIONS.find(d => d.doc === docId) || null;
+}
+
+function getChainBlockFor(docId) {
+  return CHAIN_BLOCKS.find(b => b.doc === docId) || null;
+}
+
+// Builds the "Who → Action → Object → Time → Result" trail for a single
+// document by combining its extraction provenance, any human decision, and
+// any matching entries from the live audit feed.
+function buildDocumentAuditTrail(docId) {
+  const prov = getProvenance(docId);
+  const decision = getDecisionFor(docId);
+  const rows = [];
+
+  if (prov) {
+    rows.push({
+      t: prov.extractedAt, who: 'Field Officer', role: 'Field Officer',
+      action: 'Uploaded document', object: prov.sourceFile, result: 'ok',
+    });
+    if (prov.ocrEngine !== '—') {
+      rows.push({
+        t: prov.extractedAt, who: 'AI Engine', role: 'System',
+        action: `Extracted "${prov.field}" via ${prov.ocrEngine}`,
+        object: prov.rawValue,
+        result: prov.confidence != null && prov.confidence < 60 ? 'flagged' : 'ok',
+      });
+    }
+  }
+
+  AUDIT_EVENTS.filter(e => e.doc === docId).forEach(e => {
+    rows.push({
+      t: e.t, who: e.user, role: e.role, action: e.action, object: docId,
+      result: e.tone === 'rust' ? 'flagged' : e.tone === 'green' ? 'ok' : 'info',
+    });
+  });
+
+  if (decision) {
+    rows.push({
+      t: decision.t, who: decision.user, role: decision.role,
+      action: `Corrected "${decision.field}": ${decision.reason}`,
+      object: `${decision.from} → ${decision.to}`,
+      result: 'decision',
+    });
+  }
+
+  return rows;
+}
+
 /* =========================================================================
    ROOT COMPONENT
    ========================================================================= */
@@ -96,7 +168,7 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
   const [searchId, setSearchId] = useState('');
   const [tracedDoc, setTracedDoc] = useState(null);
   const [exporting, setExporting] = useState(null);
-  const [alertsModal, setAlertsModal] = useState(false);
+  const [provenanceDoc, setProvenanceDoc] = useState(null); // doc id currently open in the provenance modal
 
   const events = AUDIT_EVENTS;
   const tamperCount = TAMPER_ALERTS.length;
@@ -148,6 +220,16 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
     }, 700);
   }
 
+  // Small helper so any document ID anywhere in the UI opens the same
+  // provenance modal — this is the "click a doc → see everything" entry point.
+  function DocLink({ id }) {
+    return (
+      <button type="button" className="doc-link mono" onClick={() => setProvenanceDoc(id)} title={`View provenance for ${id}`}>
+        {id}
+      </button>
+    );
+  }
+
   /* ---------------------------------------------------------------------
      PAGE RENDERERS
      --------------------------------------------------------------------- */
@@ -173,7 +255,7 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
                     <span className="feed-time mono">{e.t}</span>
                     <div className="feed-body">
                       <span className={`feed-role tone-${e.tone}`}>{e.role}</span>
-                      <span> <b>{e.user}</b> {e.action} on <span className="mono">{e.doc}</span></span>
+                      <span> <b>{e.user}</b> {e.action} on {DOCUMENT_PROVENANCE[e.doc] ? <DocLink id={e.doc} /> : <span className="mono">{e.doc}</span>}</span>
                     </div>
                   </div>
                 ))}
@@ -216,6 +298,7 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
 
   function renderTrace() {
     const trail = tracedDoc ? docTrail(tracedDoc) : null;
+    const hasProvenance = tracedDoc && DOCUMENT_PROVENANCE[tracedDoc];
     return (
       <>
         <PageHead title="Trace Document" sub="Look up the full provenance history of any record." />
@@ -233,7 +316,17 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
 
         {trail ? (
           <div className="panel">
-            <div className="panel-head"><h3>PROVENANCE — {tracedDoc.toUpperCase()}</h3><span className="badge badge-green"><ShieldCheck size={11} /> Chain Verified</span></div>
+            <div className="panel-head">
+              <h3>PROVENANCE — {tracedDoc.toUpperCase()}</h3>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span className="badge badge-green"><ShieldCheck size={11} /> Chain Verified</span>
+                {hasProvenance && (
+                  <button className="btn btn-outline btn-sm" onClick={() => setProvenanceDoc(tracedDoc)}>
+                    <FileSearch size={13} /> Full Document + Decision Provenance
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="panel-body" style={{ padding: 0 }}>
               <div className="feed-list">
                 {trail.map((e, i) => (
@@ -258,20 +351,25 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
   function renderDecisions() {
     return (
       <>
-        <PageHead title="Decision History" sub="Every case where a human overruled or corrected the AI." />
+        <PageHead title="Decision History" sub="Every case where a human overruled or corrected the AI. Click a document to see its full provenance." />
         <div className="panel">
           <div className="panel-body">
             <table>
-              <thead><tr><th>Document</th><th>Field</th><th>Change</th><th>By</th><th>Reason</th><th>When</th></tr></thead>
+              <thead><tr><th>Document</th><th>Field</th><th>Change</th><th>By</th><th>Reason</th><th>When</th><th></th></tr></thead>
               <tbody>
                 {DECISIONS.map((d, i) => (
                   <tr key={i}>
-                    <td className="mono"><b>{d.doc}</b></td>
+                    <td className="mono"><DocLink id={d.doc} /></td>
                     <td>{d.field}</td>
                     <td><span className="mono strike">{d.from}</span> <ChevronRight size={12} style={{ verticalAlign: 'middle', margin: '0 2px' }} /> <span className="mono">{d.to}</span></td>
                     <td>{d.user}<span className="int-sub">{d.role}</span></td>
                     <td className="reason-cell">{d.reason}</td>
                     <td className="mono" style={{ whiteSpace: 'nowrap' }}>{d.date}<br /><span className="int-sub">{d.t}</span></td>
+                    <td>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setProvenanceDoc(d.doc)}>
+                        <Eye size={13} /> Evidence
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -285,7 +383,7 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
   function renderChain() {
     return (
       <>
-        <PageHead title="Hash-Chain Viewer" sub="Every record is cryptographically linked to the one before it." />
+        <PageHead title="Hash-Chain Viewer" sub="Every record is cryptographically linked to the one before it — a tamper-evident chain, not a blockchain." />
         <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
           <KPI label="Chain Length" val="88,231 Blocks" icon={Link2} />
           <KPI label="Broken Links" val="0" icon={ShieldAlert} tone="green" />
@@ -302,7 +400,7 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
                       <span className="mono cb-id">{b.id}</span>
                       <span className="badge badge-green"><CheckCircle2 size={11} /> Verified</span>
                     </div>
-                    <div className="cb-row"><span className="k">Document</span><span className="v mono">{b.doc}</span></div>
+                    <div className="cb-row"><span className="k">Document</span><span className="v"><DocLink id={b.doc} /></span></div>
                     <div className="cb-row"><span className="k">Hash</span><span className="v mono">{b.hash}</span></div>
                     <div className="cb-row"><span className="k">Prev Hash</span><span className="v mono">{b.prev}</span></div>
                     <div className="cb-row"><span className="k">Timestamp</span><span className="v mono">{b.t}</span></div>
@@ -461,6 +559,176 @@ export default function AuditorDashboard({ userName = 'Auditor', onLogout = () =
         </header>
         <div className="page">{renderContent()}</div>
       </div>
+
+      {provenanceDoc && (
+        <ProvenanceModal docId={provenanceDoc} onClose={() => setProvenanceDoc(null)} />
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
+   PROVENANCE MODAL
+   Opens whenever any document ID is clicked. Shows, in order:
+     1. Document Provenance  — where the value physically came from
+     2. Decision Provenance  — what a human changed and why (if any)
+     3. Audit Trail          — who → action → object → time → result
+     4. Ledger Verification  — the tamper-evident hash-chain block
+   ========================================================================= */
+
+function ProvenanceModal({ docId, onClose }) {
+  const [showEvidence, setShowEvidence] = useState(false);
+  const prov = getProvenance(docId);
+  const decision = getDecisionFor(docId);
+  const chainBlock = getChainBlockFor(docId);
+  const trail = buildDocumentAuditTrail(docId);
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose(); }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const steps = prov ? [
+    { label: 'Document', value: docId },
+    { label: 'Page', value: `Page ${prov.page}` },
+    { label: 'Region', value: prov.region },
+    { label: 'OCR / HTR Engine', value: prov.ocrEngine },
+    { label: 'Extracted Value', value: prov.rawValue, mono: true },
+    { label: 'Field', value: prov.field },
+    { label: 'Confidence', value: prov.confidence != null ? `${prov.confidence}%` : '—', tone: prov.confidence != null && prov.confidence < 60 ? 'rust' : 'green' },
+    { label: 'Model', value: prov.model },
+  ] : [];
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
+      <div className="modal-panel" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="modal-head">
+          <div>
+            <span className="modal-eyebrow">DOCUMENT PROVENANCE</span>
+            <h3 className="mono">{docId}</h3>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
+        </div>
+
+        <div className="modal-body">
+          {/* 1. DOCUMENT PROVENANCE */}
+          <section className="prov-section">
+            <div className="prov-section-head"><FileSearch size={15} /><h4>Where this value came from</h4></div>
+            {prov ? (
+              <>
+                <div className="prov-chain">
+                  {steps.map((s, i) => (
+                    <div className="prov-step" key={s.label}>
+                      <div className="prov-step-marker">
+                        <span className="prov-step-num">{i + 1}</span>
+                        {i < steps.length - 1 && <span className="prov-step-line" />}
+                      </div>
+                      <div className="prov-step-body">
+                        <span className="prov-step-label">{s.label}</span>
+                        <span className={`prov-step-val ${s.mono ? 'mono' : ''} ${s.tone ? `tone-text-${s.tone}` : ''}`}>{s.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="btn btn-outline btn-sm" style={{ marginTop: 4 }} onClick={() => setShowEvidence(v => !v)}>
+                  <Eye size={13} /> {showEvidence ? 'Hide' : 'View'} Evidence Region
+                </button>
+
+                {showEvidence && (
+                  <div className="evidence-wrap">
+                    <div className="evidence-page">
+                      <div
+                        className="evidence-highlight"
+                        style={{ left: `${prov.coords.x}%`, top: `${prov.coords.y}%`, width: `${prov.coords.w}%`, height: `${prov.coords.h}%` }}
+                        title={prov.region}
+                      />
+                    </div>
+                    <span className="evidence-caption mono">{prov.sourceFile} — page {prov.page} — {prov.region}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="muted">No extraction provenance recorded for this document yet.</p>
+            )}
+          </section>
+
+          {/* 2. DECISION PROVENANCE */}
+          {decision && (
+            <section className="prov-section">
+              <div className="prov-section-head"><UserCog size={15} /><h4>Decision Provenance</h4></div>
+              <div className="decision-diff">
+                <div className="diff-card diff-ai">
+                  <span className="diff-label">AI VALUE</span>
+                  <span className="diff-val mono strike">{decision.from}</span>
+                  <span className="diff-sub">Confidence {prov?.confidence ?? '—'}%</span>
+                </div>
+                <ChevronRight size={18} className="diff-arrow" />
+                <div className="diff-card diff-human">
+                  <span className="diff-label">HUMAN VALUE</span>
+                  <span className="diff-val mono">{decision.to}</span>
+                  <span className="diff-sub">Verified by authorized official</span>
+                </div>
+              </div>
+
+              <div className="decision-meta">
+                <div className="dm-row"><span className="k">Changed by</span><span className="v">{decision.user} · {decision.role}{decision.officerId ? ` (${decision.officerId})` : ''}</span></div>
+                <div className="dm-row"><span className="k">Time</span><span className="v mono">{decision.date}, {decision.t}</span></div>
+                <div className="dm-row"><span className="k">Reason</span><span className="v">{decision.reason}</span></div>
+                <div className="dm-row"><span className="k">Evidence</span><span className="v mono">{decision.evidence || '—'}</span></div>
+              </div>
+
+              <div className="authority-note"><ShieldCheck size={13} /> AI assisted the extraction — the authorized official made the final decision.</div>
+            </section>
+          )}
+
+          {/* 3. AUDIT TRAIL */}
+          <section className="prov-section">
+            <div className="prov-section-head"><History size={15} /><h4>Audit Trail — {docId}</h4></div>
+            <table className="trail-table">
+              <thead><tr><th>Who</th><th>Action</th><th>Object</th><th>Time</th><th>Result</th></tr></thead>
+              <tbody>
+                {trail.map((r, i) => (
+                  <tr key={i}>
+                    <td>{r.who}<span className="int-sub">{r.role}</span></td>
+                    <td>{r.action}</td>
+                    <td className="mono">{r.object}</td>
+                    <td className="mono" style={{ whiteSpace: 'nowrap' }}><Clock size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />{r.t}</td>
+                    <td>
+                      {r.result === 'ok' && <span className="badge badge-green"><CheckCircle2 size={11} /> OK</span>}
+                      {r.result === 'flagged' && <span className="badge badge-rust"><AlertTriangle size={11} /> Flagged</span>}
+                      {r.result === 'decision' && <span className="badge badge-ink"><UserCog size={11} /> Decision</span>}
+                      {r.result === 'info' && <span className="badge badge-ink">Info</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {/* 4. LEDGER VERIFICATION */}
+          <section className="prov-section">
+            <div className="prov-section-head"><Link2 size={15} /><h4>Ledger Verification</h4></div>
+            {chainBlock ? (
+              <div className="ledger-check">
+                <span className="badge badge-green"><Lock size={11} /> Tamper-evident chain — Verified</span>
+                <div className="cb-row"><span className="k">Block</span><span className="v mono">{chainBlock.id}</span></div>
+                <div className="cb-row"><span className="k">Hash</span><span className="v mono">{chainBlock.hash}</span></div>
+                <div className="cb-row"><span className="k">Previous Hash</span><span className="v mono">{chainBlock.prev}</span></div>
+                <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                  Each audit entry stores the hash of the one before it. Editing this record after the fact
+                  would change its hash and break every block that follows — the mismatch is what surfaces
+                  as a tamper alert, not a rewritten history.
+                </p>
+              </div>
+            ) : (
+              <span className="muted">No ledger block recorded yet for this document.</span>
+            )}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
@@ -611,6 +879,10 @@ td{ padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top; 
 .feed-role.tone-rust{ background:var(--rust-soft); color:var(--rust); }
 .feed-role.tone-green{ background:var(--green-soft); color:var(--green); }
 
+/* Clickable document IDs — the entry point into provenance everywhere */
+.doc-link{ background:transparent; border:none; padding:0; color:var(--ink); font-weight:600; text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:2px; cursor:pointer; }
+.doc-link:hover{ color:var(--rust); text-decoration-color:var(--rust); }
+
 /* Chain — mini (dashboard) */
 .chain-mini{ display:flex; flex-direction:column; }
 .chain-block-mini{ display:flex; align-items:center; gap:8px; padding:9px 12px; background:var(--paper); border:1px solid var(--line); font-size:12px; color:var(--ink-soft); }
@@ -642,5 +914,74 @@ td{ padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top; 
   .kpi-grid{ grid-template-columns:repeat(2,1fr); }
   .grid-2{ grid-template-columns:1fr; }
   .feed-row{ grid-template-columns:1fr; gap:4px; }
+}
+`;
+
+/* CSS specific to the provenance modal, injected only while it's open */
+const MODAL_CSS = `
+.modal-overlay{ position:fixed; inset:0; background:rgba(27,42,65,0.55); display:flex; align-items:flex-start; justify-content:center;
+  padding:5vh 20px; z-index:1000; overflow-y:auto; }
+.modal-panel{ width:100%; max-width:640px; background:var(--paper-raised); border:1px solid var(--line-strong); box-shadow:0 20px 50px rgba(27,42,65,0.35);
+  margin-bottom:5vh; }
+.modal-head{ display:flex; justify-content:space-between; align-items:flex-start; padding:20px 24px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--paper-raised); }
+.modal-eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.08em; color:var(--rust); font-weight:600; }
+.modal-head h3{ font-size:19px; margin-top:4px; }
+.modal-close{ background:transparent; border:1px solid var(--line-strong); border-radius:4px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); flex:none; }
+.modal-close:hover{ border-color:var(--ink); color:var(--ink); }
+.modal-body{ padding:22px 24px 28px; display:flex; flex-direction:column; gap:26px; }
+
+.prov-section-head{ display:flex; align-items:center; gap:8px; margin-bottom:14px; color:var(--ink-soft); }
+.prov-section-head h4{ font-size:14.5px; font-weight:600; color:var(--ink); }
+
+/* Document provenance stepper */
+.prov-chain{ display:flex; flex-direction:column; }
+.prov-step{ display:flex; gap:14px; }
+.prov-step-marker{ display:flex; flex-direction:column; align-items:center; flex:none; }
+.prov-step-num{ width:22px; height:22px; border-radius:50%; background:var(--navy-soft); color:var(--ink); font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center; }
+.prov-step-line{ width:1px; flex:1; min-height:16px; background:var(--line-strong); margin:2px 0; }
+.prov-step-body{ display:flex; flex-direction:column; padding-bottom:14px; }
+.prov-step-label{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-faint); }
+.prov-step-val{ font-size:13.5px; font-weight:500; color:var(--ink); margin-top:2px; }
+.tone-text-rust{ color:var(--rust); }
+.tone-text-green{ color:var(--green); }
+
+/* Evidence region preview (mocked page + highlighted box) */
+.evidence-wrap{ margin-top:12px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.evidence-page{ position:relative; width:220px; aspect-ratio:3/4; background:
+    repeating-linear-gradient(0deg, #fff, #fff 7px, #F1EFE7 7px, #F1EFE7 8px);
+  border:1px solid var(--line-strong); }
+.evidence-highlight{ position:absolute; border:2px solid var(--rust); background:rgba(193,80,46,0.14); }
+.evidence-caption{ font-size:11px; color:var(--ink-faint); }
+
+/* Decision provenance diff */
+.decision-diff{ display:flex; align-items:stretch; gap:10px; }
+.diff-card{ flex:1; border:1px solid var(--line); padding:12px 14px; display:flex; flex-direction:column; gap:4px; }
+.diff-ai{ background:var(--rust-soft); border-color:#E6C4B4; }
+.diff-human{ background:var(--green-soft); border-color:#C7D6CC; }
+.diff-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.06em; color:var(--ink-faint); }
+.diff-val{ font-size:14.5px; font-weight:600; }
+.diff-sub{ font-size:11px; color:var(--ink-soft); }
+.diff-arrow{ align-self:center; color:var(--ink-faint); flex:none; }
+
+.decision-meta{ display:flex; flex-direction:column; margin-top:14px; border:1px solid var(--line); }
+.dm-row{ display:flex; justify-content:space-between; gap:16px; padding:9px 14px; border-bottom:1px dashed var(--line); font-size:13px; }
+.dm-row:last-child{ border-bottom:none; }
+.dm-row .k{ color:var(--ink-faint); flex:none; }
+.dm-row .v{ text-align:right; }
+
+.authority-note{ display:flex; align-items:center; gap:7px; margin-top:12px; font-size:12.5px; color:var(--green); background:var(--green-soft); padding:8px 12px; border-radius:2px; }
+
+/* Trail table inside modal reuses global table styles */
+.trail-table{ font-size:12.5px; }
+.trail-table th{ padding:6px 8px; }
+.trail-table td{ padding:8px; }
+
+.ledger-check{ border:1px solid var(--line); padding:14px 16px; }
+.ledger-check .cb-row{ margin-top:8px; }
+
+@media (max-width:600px){
+  .modal-panel{ max-width:100%; }
+  .decision-diff{ flex-direction:column; }
+  .diff-arrow{ transform:rotate(90deg); align-self:flex-start; margin-left:8px; }
 }
 `;
