@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/database');
 const { seedUsers, SEED_USERS, DEFAULT_DEV_PASSWORD } = require('./users.seed');
 const { seedParcels, SEED_PARCELS } = require('./parcels.seed');
+const { seedDocuments, SEED_DOCUMENTS } = require('./documents.seed');
 const auditService = require('../services/audit.service');
 const { AUDIT_ACTIONS } = require('../utils/constants');
 
@@ -15,6 +16,7 @@ const runSeed = async () => {
 
     await seedUsers();
     await seedParcels();
+    await seedDocuments();
 
     // Log genesis audit event if no audit logs exist
     const chainVerification = await auditService.verifyChain();

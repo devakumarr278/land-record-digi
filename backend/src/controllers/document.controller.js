@@ -91,9 +91,17 @@ class DocumentController {
         },
       });
 
+      // Automatically trigger the real AI processing pipeline
+      let pipelineInfo = null;
+      try {
+        pipelineInfo = await processingService.startProcessing(document._id, req.user, demoScenario);
+      } catch (pipeErr) {
+        console.warn(`[DocumentController] Pipeline start warning: ${pipeErr.message}`);
+      }
+
       return successResponse(
         res,
-        'Document uploaded successfully',
+        'Document uploaded and AI processing initiated successfully',
         {
           documentId: document.documentId,
           id: document._id,
@@ -103,6 +111,7 @@ class DocumentController {
           sha256: document.sha256,
           status: document.status,
           metadata: document.metadata,
+          pipeline: pipelineInfo,
         },
         201
       );
@@ -180,7 +189,7 @@ class DocumentController {
   async getDocumentById(req, res, next) {
     try {
       const { id } = req.params;
-      const isCustomId = id.startsWith('DOC-');
+      const isCustomId = id.startsWith('DOC-') || id.startsWith('LR-') || !id.match(/^[0-9a-fA-F]{24}$/);
       const query = isCustomId ? { documentId: id } : { _id: id };
 
       const document = await Document.findOne(query)
@@ -192,7 +201,7 @@ class DocumentController {
       }
 
       // Check CITIZEN access permissions
-      if (req.user.role === ROLES.CITIZEN && String(document.uploadedBy._id) !== String(req.user._id)) {
+      if (req.user.role === ROLES.CITIZEN && String(document.uploadedBy?._id || document.uploadedBy) !== String(req.user._id)) {
         return errorResponse(res, 'You are not authorized to view this document', { code: 'FORBIDDEN' }, 403);
       }
 
@@ -209,7 +218,7 @@ class DocumentController {
   async downloadDocument(req, res, next) {
     try {
       const { id } = req.params;
-      const isCustomId = id.startsWith('DOC-');
+      const isCustomId = id.startsWith('DOC-') || id.startsWith('LR-') || !id.match(/^[0-9a-fA-F]{24}$/);
       const query = isCustomId ? { documentId: id } : { _id: id };
 
       const document = await Document.findOne(query);
@@ -232,13 +241,74 @@ class DocumentController {
   }
 
   /**
+   * Submit human-in-the-loop review resolution
+   * POST /api/v1/documents/:id/resolve
+   */
+  async resolveReview(req, res, next) {
+    try {
+      const { id } = req.params;
+      const isCustomId = id.startsWith('DOC-') || id.startsWith('LR-') || !id.match(/^[0-9a-fA-F]{24}$/);
+      const query = isCustomId ? { documentId: id } : { _id: id };
+
+      const document = await Document.findOne(query);
+      if (!document) {
+        return errorResponse(res, 'Document not found', { code: 'NOT_FOUND' }, 404);
+      }
+
+      const { fields, extractedData, decisions } = req.body;
+      if (extractedData) {
+        document.extractedData = { ...document.extractedData, ...extractedData };
+      }
+      if (fields && Array.isArray(fields)) {
+        const byKey = {};
+        fields.forEach(f => { byKey[f.key] = f.value; });
+        if (byKey.owner || byKey.ownerName) document.extractedData.ownerName = byKey.owner || byKey.ownerName;
+        if (byKey.survey || byKey.surveyNumber) document.extractedData.surveyNumber = byKey.survey || byKey.surveyNumber;
+        if (byKey.area || byKey.landArea) document.extractedData.landArea = parseFloat(byKey.area || byKey.landArea) || document.extractedData.landArea;
+        if (byKey.village) document.extractedData.village = byKey.village;
+        if (byKey.classification) document.extractedData.classification = byKey.classification;
+      }
+
+      document.status = DOCUMENT_STATUS.VALIDATED;
+      document.confidenceScore = 0.99;
+      await document.save();
+
+      // Resolve open discrepancies for this document
+      const Discrepancy = require('../models/Discrepancy');
+      await Discrepancy.updateMany(
+        { document: document._id, status: 'OPEN' },
+        { status: 'RESOLVED', resolutionNotes: 'Resolved by Field Operator via Human-in-the-loop review' }
+      );
+
+      // Audit log
+      await auditService.logEvent({
+        document: document._id,
+        actor: req.user._id,
+        actorRole: req.user.role,
+        actorName: req.user.name,
+        action: AUDIT_ACTIONS.RECORD_SEALED,
+        details: {
+          event: 'HUMAN_REVIEW_RESOLVED',
+          documentId: document.documentId,
+          decisions,
+          updatedFields: document.extractedData,
+        },
+      });
+
+      return successResponse(res, 'Document review resolved and sealed successfully', { document }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Trigger document reprocessing
    * POST /api/v1/documents/:id/reprocess
    */
   async reprocessDocument(req, res, next) {
     try {
       const { id } = req.params;
-      const isCustomId = id.startsWith('DOC-');
+      const isCustomId = id.startsWith('DOC-') || id.startsWith('LR-') || !id.match(/^[0-9a-fA-F]{24}$/);
       const query = isCustomId ? { documentId: id } : { _id: id };
 
       const document = await Document.findOne(query);

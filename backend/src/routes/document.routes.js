@@ -41,6 +41,14 @@ router.post(
   (req, res, next) => processingController.processDocument(req, res, next)
 );
 
+// Resolve review document
+router.post(
+  '/:id/resolve',
+  authenticate,
+  authorize(ROLES.FIELD_OPERATOR, ROLES.SYSTEM_ADMIN, ROLES.VERIFYING_OFFICER),
+  (req, res, next) => documentController.resolveReview(req, res, next)
+);
+
 // Live processing status polling endpoint
 router.get('/:id/processing', authenticate, (req, res, next) =>
   processingController.getDocumentProcessingStatus(req, res, next)

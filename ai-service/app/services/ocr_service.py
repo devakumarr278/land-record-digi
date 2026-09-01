@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from PIL import Image
 
 from app.utils.file_utils import load_document_pages
+from app.services.preprocessing import preprocessing_service
 
 load_dotenv()
 
@@ -26,10 +27,8 @@ GEMINI_API_KEYS = [
 CANDIDATE_MODELS = [
     "gemini-3.6-flash",
     "gemini-3.5-flash",
-    "gemini-flash-latest",
     "gemini-3.7-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    "gemini-flash-latest",
 ]
 
 
@@ -205,9 +204,23 @@ def process_all_pages_parallel(pages: List[Image.Image]) -> List[Dict[str, Any]]
     return sorted_results
 
 
+def detect_language(text: str) -> str:
+    """Cheap, dependency-free language tag based on script ranges.
+    Extend with langdetect if you need more granularity."""
+    if not text:
+        return "unknown"
+    tamil_chars = sum(1 for c in text if "\u0B80" <= c <= "\u0BFF")
+    latin_chars = sum(1 for c in text if c.isascii() and c.isalpha())
+    if tamil_chars > 5 and tamil_chars > latin_chars * 0.3:
+        return "ta" if latin_chars < tamil_chars else "ta+en"
+    return "en" if latin_chars > 5 else "unknown"
+
+
 def perform_ocr(file_path: str) -> Dict[str, Any]:
     """
-    Dispatch parallel OCR processing for any PDF or Image file.
+    Dispatch parallel OCR processing for any PDF or Image file after per-page enhancement.
+    Prioritizes native PyMuPDF digital text extraction, followed by Gemini multimodal vision.
+    Never returns hardcoded synthetic transcripts.
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found at path: {file_path}")
@@ -216,22 +229,112 @@ def perform_ocr(file_path: str) -> Dict[str, Any]:
     if error_msg or not pages:
         raise ValueError(error_msg or f"Could not load pages from file: {file_path}")
 
-    start_time = time.time()
-    results = process_all_pages_parallel(pages)
-    elapsed = time.time() - start_time
+    enhanced_pages, page_metrics = [], []
+    for i, page in enumerate(pages):
+        enhanced_img, metrics = preprocessing_service.enhance_image(page)
+        enhanced_pages.append(enhanced_img)
+        page_metrics.append({"page": i + 1, **metrics})
 
-    logger.info(f"[OCRService] OCR complete for {len(pages)} pages in {elapsed:.2f}s")
+    # 1. Native digital text (fast, cheapest, most accurate when available)
+    pdf_text_pages = []
+    if file_path.lower().endswith(".pdf"):
+        try:
+            import fitz
+            doc = fitz.open(file_path)
+            for p_idx, page in enumerate(doc):
+                txt = page.get_text().strip()
+                if txt:
+                    pdf_text_pages.append({
+                        "page": p_idx + 1,
+                        "text": txt,
+                        "model": "PyMuPDF-Native",
+                        "success": True,
+                        "language": detect_language(txt),
+                    })
+        except Exception as e:
+            logger.warning(f"[OCRService] PyMuPDF note: {e}")
 
-    full_text = "\n\n".join(
-        page["text"] for page in results if page.get("text")
-    ).strip()
+    if pdf_text_pages and any(len(p["text"]) > 10 for p in pdf_text_pages):
+        full_text = "\n\n".join(f"[PAGE {p['page']}]\n{p['text']}" for p in pdf_text_pages).strip()
+        logger.info(f"[OCRService] Successfully extracted live digital text from {len(pdf_text_pages)} pages via PyMuPDF.")
+        return {
+            "success": True,
+            "pages": pdf_text_pages,
+            "pageMetrics": page_metrics,
+            "fullText": full_text,
+            "engineUsed": "PyMuPDF-Native",
+            "requiresManualReview": False,
+        }
 
-    is_overall_success = any(p.get("success") for p in results)
+    # 2. Gemini multimodal vision (if keys configured)
+    if GEMINI_API_KEYS:
+        start_time = time.time()
+        results = process_all_pages_parallel(enhanced_pages)
+        elapsed = time.time() - start_time
+        logger.info(f"[OCRService] Gemini OCR complete for {len(enhanced_pages)} pages in {elapsed:.2f}s")
+
+        for r in results:
+            r["language"] = detect_language(r.get("text") or "")
+
+        full_text = "\n\n".join(
+            page["text"] for page in results if page.get("text")
+        ).strip()
+
+        is_overall_success = any(p.get("success") for p in results)
+
+        if is_overall_success and full_text:
+            return {
+                "success": True,
+                "pages": results,
+                "pageMetrics": page_metrics,
+                "fullText": full_text,
+                "engineUsed": "Gemini-Vision",
+                "requiresManualReview": False,
+            }
+
+    # 3. Local Neural OCR Engine (RapidOCR ONNX) — runs locally on CPU with zero cloud API keys
+    try:
+        from rapidocr_onnxruntime import RapidOCR
+        import numpy as np
+        engine = RapidOCR()
+        rapid_pages = []
+        for p_idx, page_img in enumerate(enhanced_pages):
+            img_np = np.array(page_img)
+            ocr_result, _ = engine(img_np)
+            page_lines = []
+            if ocr_result:
+                for box, txt, score in ocr_result:
+                    if float(score) > 0.35:
+                        page_lines.append(txt)
+            page_text = "\n".join(page_lines).strip()
+            rapid_pages.append({
+                "page": p_idx + 1,
+                "text": page_text if page_text else None,
+                "model": "RapidOCR-ONNX",
+                "success": bool(page_text),
+                "language": detect_language(page_text),
+            })
+
+        full_text = "\n\n".join(p["text"] for p in rapid_pages if p.get("text")).strip()
+        is_success = any(p.get("success") for p in rapid_pages)
+        return {
+            "success": is_success,
+            "pages": rapid_pages,
+            "pageMetrics": page_metrics,
+            "fullText": full_text if full_text else None,
+            "engineUsed": "RapidOCR-Local",
+            "requiresManualReview": not is_success or len(full_text) < 15,
+        }
+    except Exception as rapid_err:
+        logger.warning(f"[OCRService] RapidOCR note: {rapid_err}")
 
     return {
-        "success": is_overall_success,
-        "pages": results,
-        "fullText": full_text if full_text else None,
+        "success": False,
+        "pages": [],
+        "pageMetrics": page_metrics,
+        "fullText": None,
+        "engineUsed": None,
+        "requiresManualReview": True,
     }
 
 

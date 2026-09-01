@@ -9,7 +9,7 @@ const { ROLES } = require('../utils/constants');
 router.get(
   '/',
   authenticate,
-  authorize(ROLES.CHIEF_AUDITOR, ROLES.SYSTEM_ADMIN, ROLES.DISTRICT_ADMIN),
+  authorize(ROLES.CHIEF_AUDITOR, ROLES.SYSTEM_ADMIN, ROLES.DISTRICT_ADMIN, ROLES.FIELD_OPERATOR, ROLES.VERIFYING_OFFICER),
   (req, res, next) => auditController.getAuditLogs(req, res, next)
 );
 
@@ -17,7 +17,7 @@ router.get(
 router.get(
   '/verify-chain',
   authenticate,
-  authorize(ROLES.CHIEF_AUDITOR, ROLES.SYSTEM_ADMIN, ROLES.DISTRICT_ADMIN),
+  authorize(ROLES.CHIEF_AUDITOR, ROLES.SYSTEM_ADMIN, ROLES.DISTRICT_ADMIN, ROLES.FIELD_OPERATOR, ROLES.VERIFYING_OFFICER),
   (req, res, next) => auditController.verifyChain(req, res, next)
 );
 
@@ -30,7 +30,8 @@ router.get(
     ROLES.SYSTEM_ADMIN,
     ROLES.DISTRICT_ADMIN,
     ROLES.VERIFYING_OFFICER,
-    ROLES.DISTRICT_EXPERT
+    ROLES.DISTRICT_EXPERT,
+    ROLES.FIELD_OPERATOR
   ),
   (req, res, next) => auditController.getDocumentAuditLogs(req, res, next)
 );

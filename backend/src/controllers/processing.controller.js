@@ -11,7 +11,7 @@ class ProcessingController {
   async processDocument(req, res, next) {
     try {
       const { id } = req.params;
-      const isCustomId = id.startsWith('DOC-');
+      const isCustomId = id.startsWith('DOC-') || id.startsWith('LR-') || id.length < 24;
       const query = isCustomId ? { documentId: id } : { _id: id };
 
       const document = await Document.findOne(query);
@@ -42,7 +42,7 @@ class ProcessingController {
   async getDocumentProcessingStatus(req, res, next) {
     try {
       const { id } = req.params;
-      const isCustomId = id.startsWith('DOC-');
+      const isCustomId = id.startsWith('DOC-') || id.startsWith('LR-') || id.length < 24;
       const query = isCustomId ? { documentId: id } : { _id: id };
 
       const document = await Document.findOne(query);

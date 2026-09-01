@@ -26,4 +26,8 @@ router.get('/parcels', authenticate, (req, res, next) => gisController.getParcel
 // Get single parcel by ID (GET /api/v1/gis/parcels/:id)
 router.get('/parcels/:id', authenticate, (req, res, next) => gisController.getParcelById(req, res, next));
 
+// Save and Get GCP points for a document
+router.post('/gcps/:docId', authenticate, (req, res, next) => gisController.saveDocGcps(req, res, next));
+router.get('/gcps/:docId', authenticate, (req, res, next) => gisController.getDocGcps(req, res, next));
+
 module.exports = router;

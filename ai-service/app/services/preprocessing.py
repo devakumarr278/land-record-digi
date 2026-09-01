@@ -8,7 +8,7 @@ from app.utils.file_utils import pil_to_cv2, cv2_to_pil
 class PreprocessingService:
     """
     Image enhancement and preprocessing for Tamil Nadu land records.
-    Applies grayscale conversion, adaptive contrast enhancement, bilateral denoising, and deskew.
+    Adaptive per-page metric decisions based on brightness, contrast, sharpness, and noise.
     """
 
     def enhance_image(self, pil_image: Image.Image) -> Tuple[Image.Image, Dict[str, Any]]:
@@ -20,41 +20,68 @@ class PreprocessingService:
 
             cv_img = pil_to_cv2(pil_image)
             height, width = cv_img.shape[:2]
-            metrics["originalDimensions"] = {"width": width, "height": height}
-
-            # 1. Convert to Grayscale
             gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-            operations.append("grayscale_conversion")
 
-            # 2. Adaptive Contrast Enhancement (CLAHE)
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            contrast_enhanced = clahe.apply(gray)
-            operations.append("adaptive_clahe_contrast")
+            metrics = {"originalDimensions": {"width": width, "height": height}}
+            operations = []
+            working = gray
 
-            # 3. Bilateral Filter Denoising (preserves edges of Tamil script glyphs)
-            denoised = cv2.bilateralFilter(contrast_enhanced, d=9, sigmaColor=75, sigmaSpace=75)
-            operations.append("bilateral_filter_denoising")
+            # --- Decide what THIS page actually needs ---
+            mean_brightness = float(np.mean(gray))
+            brightness_std = float(np.std(gray))
+            laplacian_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())  # sharpness proxy
 
-            # 4. Deskew calculation using Hough lines / thresholding
-            skew_angle = self._calculate_skew_angle(denoised)
-            if abs(skew_angle) > 0.5 and abs(skew_angle) < 45.0:
-                denoised = self._rotate_image(denoised, skew_angle)
-                operations.append(f"deskew_corrected_{skew_angle:.1f}_deg")
-                metrics["skewAngle"] = round(skew_angle, 2)
+            metrics["meanBrightness"] = round(mean_brightness, 1)
+            metrics["contrastStd"] = round(brightness_std, 1)
+            metrics["sharpness"] = round(laplacian_var, 1)
+
+            # Brightness correction only if too dark/bright
+            if mean_brightness < 95:
+                gamma = 1.35
+                working = self._gamma_correct(working, gamma)
+                operations.append(f"brightness_boost_gamma_{gamma}")
+            elif mean_brightness > 195:
+                working = cv2.convertScaleAbs(working, alpha=0.85, beta=-15)
+                operations.append("brightness_reduction")
+
+            # Contrast only if flat (low std) — handwriting on faded paper needs this,
+            # crisp typed pages don't
+            if brightness_std < 45:
+                clahe = cv2.createCLAHE(clipLimit=2.2, tileGridSize=(8, 8))
+                working = clahe.apply(working)
+                operations.append("adaptive_clahe_contrast")
             else:
-                metrics["skewAngle"] = 0.0
+                metrics["contrastSkipped"] = "sufficient_contrast_detected"
 
-            # Convert back to 3-channel RGB for multimodal LLM ingestion
-            final_rgb = cv2.cvtColor(denoised, cv2.COLOR_GRAY2RGB)
+            # Denoise only if the page is noisy AND not already sharp (avoid
+            # smearing thin handwritten strokes on a clean scan)
+            noise_estimate = self._estimate_noise(gray)
+            metrics["noiseEstimate"] = round(noise_estimate, 2)
+            if noise_estimate > 6.0:
+                working = cv2.bilateralFilter(working, d=7, sigmaColor=55, sigmaSpace=55)
+                operations.append("bilateral_filter_denoising")
+            else:
+                metrics["denoiseSkipped"] = "low_noise_detected"
+
+            # Deskew — always check, only rotate if actually skewed
+            skew_angle = self._calculate_skew_angle(working)
+            if abs(skew_angle) > 0.5 and abs(skew_angle) < 45.0:
+                working = self._rotate_image(working, skew_angle)
+                operations.append(f"deskew_corrected_{skew_angle:.1f}_deg")
+            metrics["skewAngle"] = round(skew_angle, 2) if abs(skew_angle) <= 45.0 else 0.0
+
+            # Legibility heuristic — flags pages likely to defeat OCR (very low
+            # sharpness = probably illegible handwriting even after enhancement)
+            metrics["legibilityFlag"] = "LOW_CONFIDENCE_EXPECTED" if laplacian_var < 40 else "OK"
+
+            final_rgb = cv2.cvtColor(working, cv2.COLOR_GRAY2RGB)
             result_pil = cv2_to_pil(final_rgb)
 
-            metrics["operationsApplied"] = operations
+            metrics["operationsApplied"] = operations or ["none_needed"]
             metrics["status"] = "SUCCESS"
-
             return result_pil, metrics
 
         except ImportError:
-            # Fallback to pure Pillow preprocessing if cv2 is not available
             gray = ImageOps.grayscale(pil_image)
             enhancer = ImageEnhance.Contrast(gray)
             enhanced = enhancer.enhance(1.5)
@@ -63,14 +90,33 @@ class PreprocessingService:
                 "operationsApplied": ["pillow_grayscale", "pillow_contrast_boost"],
                 "status": "FALLBACK_PIL",
                 "skewAngle": 0.0,
+                "legibilityFlag": "OK",
             }
         except Exception as e:
-            # Safe return of original image if an issue occurs
             return pil_image, {
                 "operationsApplied": ["original_passthrough"],
                 "status": "ERROR",
                 "error": str(e),
+                "legibilityFlag": "UNKNOWN",
             }
+
+    def _gamma_correct(self, img: np.ndarray, gamma: float) -> np.ndarray:
+        inv = 1.0 / gamma
+        table = np.array([((i / 255.0) ** inv) * 255 for i in range(256)]).astype("uint8")
+        import cv2
+        return cv2.LUT(img, table)
+
+    def _estimate_noise(self, gray_img: np.ndarray) -> float:
+        try:
+            import cv2
+            h, w = gray_img.shape
+            if h <= 4 or w <= 4:
+                return 0.0
+            m = np.array([[1, -2, 1], [-2, 4, -2], [1, -2, 1]])
+            sigma = float(np.sum(np.abs(cv2.filter2D(gray_img.astype(float), -1, m))))
+            return float(sigma * (0.5 * np.pi) ** 0.5 / (6 * (w - 2) * (h - 2)))
+        except Exception:
+            return 0.0
 
     def _calculate_skew_angle(self, gray_cv_img: np.ndarray) -> float:
         """Estimate document skew angle using minAreaRect on foreground contours"""
