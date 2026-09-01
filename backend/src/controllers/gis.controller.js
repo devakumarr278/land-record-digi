@@ -146,6 +146,50 @@ class GISController {
       next(error);
     }
   }
+
+  /**
+   * Save Ground Control Points (GCPs) for a document
+   * POST /api/v1/gis/gcps/:docId
+   */
+  async saveDocGcps(req, res, next) {
+    try {
+      const { docId } = req.params;
+      const { gcps } = req.body;
+      const isCustomId = docId.startsWith('DOC-') || docId.startsWith('LR-') || !docId.match(/^[0-9a-fA-F]{24}$/);
+      const query = isCustomId ? { documentId: docId } : { _id: docId };
+
+      const document = await Document.findOne(query);
+      if (document) {
+        document.metadata = document.metadata || {};
+        document.metadata.gcps = gcps;
+        document.markModified('metadata');
+        await document.save();
+      }
+
+      return successResponse(res, 'GCP points saved successfully', { docId, gcps }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get Ground Control Points (GCPs) for a document
+   * GET /api/v1/gis/gcps/:docId
+   */
+  async getDocGcps(req, res, next) {
+    try {
+      const { docId } = req.params;
+      const isCustomId = docId.startsWith('DOC-') || docId.startsWith('LR-') || !docId.match(/^[0-9a-fA-F]{24}$/);
+      const query = isCustomId ? { documentId: docId } : { _id: docId };
+
+      const document = await Document.findOne(query);
+      const gcps = document?.metadata?.gcps || null;
+
+      return successResponse(res, 'GCP points retrieved', { docId, gcps }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new GISController();

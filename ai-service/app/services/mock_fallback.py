@@ -18,41 +18,40 @@ class MockFallbackService:
         meta = metadata or {}
         scenario = demo_scenario or meta.get("demoScenario") or "STANDARD"
 
-        survey_num = meta.get("surveyNumber") or meta.get("survey_number") or "145/2"
-        sub_div = meta.get("subDivision") or meta.get("sub_division") or "2"
-        village = meta.get("village") or "Kovilpalayam"
-        taluk = meta.get("taluk") or "Coimbatore North"
-        district = meta.get("district") or "Coimbatore"
-        owner_name = "Ramasamy Gounder"
-        father_name = "Marappa Gounder"
-        land_area = 2.12  # Default matches clean record
-        area_unit = "Acres"
-        classification = "Ryotwari Nanjai (Wet Land)"
+        survey_num = meta.get("surveyNumber") or meta.get("survey_number")
+        sub_div = survey_num.split("/")[1] if (survey_num and "/" in survey_num) else (meta.get("subDivision") or meta.get("sub_division"))
+        village = meta.get("village")
+        taluk = meta.get("taluk")
+        district = meta.get("district")
+        owner_name = meta.get("ownerName") or meta.get("owner_name")
+        father_name = meta.get("fatherName") or meta.get("father_name")
+        land_area = meta.get("landArea") or meta.get("area")
+        area_unit = "Acres" if land_area else None
+        classification = meta.get("classification")
+        boundaries = {
+            "north": None,
+            "south": None,
+            "east": None,
+            "west": None,
+        }
 
         field_confidence = {
-            "survey_number": 0.99,
-            "sub_division": 0.98,
-            "owner_name": 0.95,
-            "father_name": 0.94,
-            "village": 0.97,
-            "taluk": 0.96,
-            "district": 0.99,
-            "area": 0.93,
-            "boundaries": 0.90,
-            "surveyNumber": 0.99,
-            "subDivision": 0.98,
-            "ownerName": 0.95,
-            "fatherName": 0.94,
-            "landArea": 0.93,
+            "survey_number": 0.6 if survey_num else 0.0,
+            "sub_division": 0.6 if sub_div else 0.0,
+            "owner_name": 0.5 if owner_name else 0.0,
+            "father_name": 0.5 if father_name else 0.0,
+            "village": 0.6 if village else 0.0,
+            "taluk": 0.5 if taluk else 0.0,
+            "district": 0.5 if district else 0.0,
+            "area": 0.5 if land_area else 0.0,
+            "boundaries": 0.0,
+            "surveyNumber": 0.6 if survey_num else 0.0,
+            "subDivision": 0.6 if sub_div else 0.0,
+            "ownerName": 0.5 if owner_name else 0.0,
+            "fatherName": 0.5 if father_name else 0.0,
+            "landArea": 0.5 if land_area else 0.0,
         }
-        overall_confidence = 0.95
-
-        boundaries = {
-            "north": "East-West Main Cart Track",
-            "south": "Survey No 145/3 Senthil Land",
-            "east": "Kovilpalayam Water Channel",
-            "west": "Survey No 144 Odai Poramboke",
-        }
+        overall_confidence = 0.5 if any([survey_num, owner_name, village]) else 0.0
 
         # Apply specific scenario adaptations
         if scenario == "LOW_CONFIDENCE":

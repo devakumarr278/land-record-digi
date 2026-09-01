@@ -17,11 +17,13 @@ function App() {
   const [toasts, setToasts] = useState([]);
 
   const addToast = (msg, kind = '') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, msg, kind }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2850);
+      const id = Date.now() + Math.random();
+      setToasts((prev) => [...prev, { id, msg, kind }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 2850);
+    }, 0);
   };
 
   const handleLogin = (userRole, name) => {

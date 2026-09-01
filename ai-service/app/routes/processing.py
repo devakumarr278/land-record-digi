@@ -292,9 +292,12 @@ async def process_document(
             overallConfidence=overall_conf,
             processingMode="AI" if not used_fallback else "DEMO_FALLBACK",
             fallbackReason=fallback_reason,
-            notes=[f"Successfully processed {pages_processed} page(s) using {used_model}."],
             stages={
-                "preprocessing": preproc_metrics,
+                "preprocessing": {
+                    "status": "SUCCESS",
+                    "pageMetrics": ocr_result_raw.get("pageMetrics", [preproc_metrics]) if ocr_result_raw else [preproc_metrics],
+                    "operationsApplied": preproc_metrics.get("operationsApplied", []),
+                },
                 "classification": {"document_type": classified_type, "confidence": type_confidence},
                 "ocr": {"pages": len(page_results), "model": used_model},
             },

@@ -149,6 +149,117 @@ const SEED_PARCELS = [
     },
     status: 'ACTIVE',
   },
+  {
+    parcelId: 'PAR-POL-125-2',
+    surveyNumber: '125/2',
+    subDivision: '2A',
+    district: 'Coimbatore',
+    taluk: 'Pollachi',
+    village: 'Kinathukadavu',
+    ownerName: 'MURUGAN KUMAR',
+    ownerNameTamil: 'முருகன் குமார்',
+    fatherName: 'Palanisamy',
+    area: 1.80, // Canonical registry area: 1.80 Acres
+    areaUnit: 'Acres',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [77.0110, 10.8230],
+          [77.0150, 10.8230],
+          [77.0150, 10.8260],
+          [77.0110, 10.8260],
+          [77.0110, 10.8230],
+        ],
+      ],
+    },
+    referenceData: {
+      pattaNumber: '458',
+      landType: 'Agricultural (Dry)',
+      marketValueEstimate: 5200000,
+      boundaries: {
+        north: 'Survey No 125/1 Cart Track',
+        south: 'Survey No 125/3 Murugan Land',
+        east: 'Pollachi Main Road',
+        west: 'Odai Water Body',
+      },
+    },
+    status: 'ACTIVE',
+  },
+  {
+    parcelId: 'PAR-POL-118-3',
+    surveyNumber: '118/3',
+    subDivision: '3',
+    district: 'Coimbatore',
+    taluk: 'Pollachi',
+    village: 'Anaimalai',
+    ownerName: 'TN Revenue Dept',
+    ownerNameTamil: 'வருவாய்த்துறை',
+    fatherName: 'Government of Tamil Nadu',
+    area: 8.20,
+    areaUnit: 'Acres',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [76.9270, 10.5810],
+          [76.9310, 10.5810],
+          [76.9310, 10.5840],
+          [76.9270, 10.5840],
+          [76.9270, 10.5810],
+        ],
+      ],
+    },
+    referenceData: {
+      pattaNumber: '1183',
+      landType: 'Forest / River Buffer Reserve',
+      marketValueEstimate: 9800000,
+      boundaries: {
+        north: 'Aliyar River Bank',
+        south: 'Anaimalai Reserve Forest',
+        east: 'Canal Road',
+        west: 'Public Pathway',
+      },
+    },
+    status: 'ACTIVE',
+  },
+  {
+    parcelId: 'PAR-SUL-54-2',
+    surveyNumber: '54/2',
+    subDivision: '2',
+    district: 'Coimbatore',
+    taluk: 'Sulur',
+    village: 'Sulur',
+    ownerName: 'Karthik Subramanian',
+    ownerNameTamil: 'கார்த்திக் சுப்பிரமணியன்',
+    fatherName: 'Subramanian',
+    area: 3.10,
+    areaUnit: 'Acres',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [77.1230, 11.0230],
+          [77.1270, 11.0230],
+          [77.1270, 11.0260],
+          [77.1230, 11.0260],
+          [77.1230, 11.0230],
+        ],
+      ],
+    },
+    referenceData: {
+      pattaNumber: '518',
+      landType: 'Agricultural (Dry)',
+      marketValueEstimate: 6400000,
+      boundaries: {
+        north: 'Sulur Lake Channel',
+        south: 'Survey No 54/3',
+        east: 'Trichy Road NH-81',
+        west: 'Private Land',
+      },
+    },
+    status: 'ACTIVE',
+  },
 ];
 
 const seedParcels = async () => {
