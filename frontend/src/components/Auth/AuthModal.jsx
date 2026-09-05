@@ -33,14 +33,14 @@ const CATEGORY_META = {
 // Government role definitions (mirrors the HTML demo)
 const GOVERNMENT_ROLES = [
   { value: 'field_verification_officer', label: 'Field & Verification Officer', icon: '🔍', blurb: 'Digitize documents, upload records, review AI extraction' },
-  { value: 'tehsildar_sub_registrar', label: 'Tehsildar / Sub-Registrar', icon: '⚖️', blurb: 'Handle legally significant verification and decisions' },
+  { value: 'tehsildar_sub_registrar', label: 'Tahsildar / Sub-Registrar', icon: '⚖️', blurb: 'Handle legally significant verification and decisions' },
   { value: 'district_administrator', label: 'District Administrator', icon: '🏛️', blurb: 'Manage district workload, cases and analytics' },
   { value: 'dilrmp_state_nodal_officer', label: 'State Nodal Officer', icon: '🏢', blurb: 'State-level monitoring, configuration and integration' },
   { value: 'auditor', label: 'Auditor', icon: '🧾', blurb: 'Audit documents' },
 ];
 
 // Local storage helpers (from the demo)
-const STORAGE_KEYS = { CITIZENS: 'landintel_citizens', GOV_REQUESTS: 'landintel_gov_requests' };
+const STORAGE_KEYS = { CITIZENS: 'nilora_citizens', GOV_REQUESTS: 'nilora_gov_requests' };
 const ADMIN_CREDENTIALS = { employeeId: 'ADMIN001', password: 'Admin@123' };
 const GOVERNMENT_CREDENTIALS = {
   operator: { username: 'operator', password: 'Operator@123', role: 'field_verification_officer' },

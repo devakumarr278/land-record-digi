@@ -1,541 +1,859 @@
 import React, { useState, useEffect } from 'react';
 import {
-  LayoutDashboard, Trophy, TrendingUp, Radio, Map as MapIcon, RefreshCw,
-  ShieldCheck, SlidersHorizontal, Settings as SettingsIcon, LogOut,
-  ChevronsLeft, ChevronsRight, CheckCircle2, Circle, AlertTriangle,
-  Search, X, MapPin, Key, Megaphone, ChevronRight, Wifi, WifiOff,
-  Database, Activity, ArrowUpRight, ArrowDownRight, Send
+  LayoutDashboard, Trophy, TrendingUp, Radio, Map as MapIcon, Layers,
+  Database, ShieldCheck, SlidersHorizontal, Settings as SettingsIcon, LogOut,
+  Search, Bell, ChevronDown, ChevronRight, X, Download, Wifi, WifiOff,
+  Activity, ArrowUpRight, ArrowDownRight, Send, Filter, CheckCircle2,
+  AlertTriangle, RefreshCw, Key, Megaphone, Check, Globe, MapPin, Eye,
+  Sliders, Shield, FileText, CheckCircle, Clock
 } from 'lucide-react';
+import logoImg from '../../assets/logo.jpg';
+import RealCadastralMap from '../Common/RealCadastralMap';
 
 /* =========================================================================
-   MOCK DATA
+   MOCK DATA (Matching statenodalofficier.png & State Nodal Ecosystem)
    ========================================================================= */
 
-const DISTRICTS = [
-  { name: 'Chennai',       progress: 92, digitized: 184300, discrepancy: 3.1, trend: 2.4 },
-  { name: 'Kanchipuram',   progress: 82, digitized: 121800, discrepancy: 4.6, trend: 1.8 },
-  { name: 'Coimbatore',    progress: 78, digitized: 158900, discrepancy: 5.2, trend: 3.1 },
-  { name: 'Tiruchirapalli',progress: 71, digitized:  97400, discrepancy: 6.0, trend: 0.9 },
-  { name: 'Erode',         progress: 60, digitized:  64200, discrepancy: 7.4, trend: -1.2 },
-  { name: 'Dindigul',      progress: 58, digitized:  51700, discrepancy: 8.1, trend: 0.4 },
-  { name: 'Madurai',       progress: 65, digitized:  88300, discrepancy: 6.7, trend: 2.0 },
-  { name: 'Salem',         progress: 54, digitized:  60100, discrepancy: 9.3, trend: -0.6 },
-  { name: 'Vellore',       progress: 44, digitized:  39800, discrepancy: 10.8, trend: 0.7 },
-  { name: 'Tirunelveli',   progress: 48, digitized:  42600, discrepancy: 9.9, trend: 1.1 },
-  { name: 'Thanjavur',     progress: 39, digitized:  31200, discrepancy: 11.6, trend: -0.3 },
-  { name: 'Cuddalore',     progress: 36, digitized:  27900, discrepancy: 12.4, trend: 0.2 },
+const DISTRICT_PROGRESS_DATA = [
+  { name: 'Chennai', progress: 92, digitized: '184.3K', discrepancy: 3.1, trend: '+2.4%', status: 'Leading', officers: 28 },
+  { name: 'Kanchipuram', progress: 82, digitized: '121.8K', discrepancy: 4.6, trend: '+1.8%', status: 'On Track', officers: 19 },
+  { name: 'Coimbatore', progress: 78, digitized: '158.9K', discrepancy: 5.2, trend: '+3.1%', status: 'On Track', officers: 32 },
+  { name: 'Tiruchirapalli', progress: 71, digitized: '97.4K', discrepancy: 6.0, trend: '+0.9%', status: 'On Track', officers: 22 },
+  { name: 'Madurai', progress: 65, digitized: '88.3K', discrepancy: 6.7, trend: '+2.0%', status: 'Moderate', officers: 24 },
+  { name: 'Salem', progress: 54, digitized: '60.1K', discrepancy: 9.3, trend: '-0.6%', status: 'Needs Review', officers: 18 },
+  { name: 'Erode', progress: 60, digitized: '64.2K', discrepancy: 7.4, trend: '-1.2%', status: 'Moderate', officers: 16 },
+  { name: 'Dindigul', progress: 58, digitized: '51.7K', discrepancy: 8.1, trend: '+0.4%', status: 'Moderate', officers: 14 },
+  { name: 'Vellore', progress: 44, digitized: '39.8K', discrepancy: 10.8, trend: '+0.7%', status: 'Lagging', officers: 15 },
+  { name: 'Tirunelveli', progress: 48, digitized: '42.6K', discrepancy: 9.9, trend: '+1.1%', status: 'Lagging', officers: 17 }
 ];
 
-const INTEGRATIONS = [
+const INTEGRATIONS_HEALTH = [
   {
-    id: 'lrms', name: 'LRMS API', full: 'Land Records Management System',
-    desc: 'Central sync of ownership, mutation and khata records across all districts.',
-    status: 'connected', uptime: 99.8, lastSync: '2 mins ago', latency: '184ms', endpoint: 'lrms.tn.gov.in/api/v3',
+    id: 'lrms',
+    name: 'LRMS API',
+    subtitle: '2 mins ago',
+    status: 'Connected',
+    statusTone: 'green',
+    uptime: '99.8%',
+    latency: '184ms',
+    endpoint: 'https://lrms.tn.gov.in/api/v3',
+    recordsSynced: '1,042,850'
   },
   {
-    id: 'gis', name: 'State GIS API', full: 'Cadastral Mapping Service',
-    desc: 'Plot boundary geometry, survey polygons and satellite overlay data.',
-    status: 'syncing', uptime: 97.2, lastSync: 'Syncing now', latency: '412ms', endpoint: 'gis.tn.gov.in/cadastral/v2',
+    id: 'gis',
+    name: 'State GIS API',
+    subtitle: 'Syncing now',
+    status: 'Syncing',
+    statusTone: 'amber',
+    uptime: '97.2%',
+    latency: '412ms',
+    endpoint: 'https://gis.tn.gov.in/cadastral/v2',
+    recordsSynced: '784,120'
   },
   {
-    id: 'legacy', name: 'Legacy DB', full: 'Pre-2010 Registration Archive',
-    desc: 'Read-only archive of handwritten register volumes prior to digitization.',
-    status: 'connected', uptime: 99.9, lastSync: '5 mins ago', latency: '96ms', endpoint: 'archive-db.tn.gov.in',
-  },
+    id: 'legacy',
+    name: 'Legacy DB',
+    subtitle: '5 mins ago',
+    status: 'Connected',
+    statusTone: 'green',
+    uptime: '99.9%',
+    latency: '96ms',
+    endpoint: 'https://archive-db.tn.gov.in',
+    recordsSynced: '2,450,000'
+  }
 ];
 
-const POLICIES = [
-  { id: 'p1', label: 'Auto-validate records above confidence threshold', desc: 'Skip manual review when every extracted field clears the AI confidence bar.', enabled: true },
-  { id: 'p2', label: 'Require dual verification for mutation records', desc: 'Mutation-type documents need sign-off from both Tehsildar and District Admin.', enabled: true },
-  { id: 'p3', label: 'Allow Field Officers to bulk upload', desc: 'Officers can queue more than 20 documents in a single upload batch.', enabled: false },
-  { id: 'p4', label: 'Enable citizen grievance auto-routing', desc: 'Route incoming grievances to the relevant Tehsildar by village code.', enabled: true },
-  { id: 'p5', label: 'Lock records after Auditor sign-off', desc: 'Prevent further edits once a record clears the audit trail review.', enabled: false },
+const INITIAL_POLICIES = [
+  { id: 'p1', title: 'Auto-validate records above confidence threshold', desc: 'Skip manual review when every extracted field clears the AI confidence threshold.', enabled: true, category: 'AI Validation' },
+  { id: 'p2', title: 'Require dual verification for mutation records', desc: 'Mutation-type documents require sign-off from both Tahsildar and District Administrator.', enabled: true, category: 'Compliance' },
+  { id: 'p3', title: 'Allow Field Officers to bulk upload', desc: 'Field & Verification Officers can queue up to 50 documents in a single batch.', enabled: false, category: 'Ingestion' },
+  { id: 'p4', title: 'Enable citizen grievance auto-routing', desc: 'Route incoming citizen discrepancy queries automatically to taluk Tahsildar by village code.', enabled: true, category: 'Citizen Services' },
+  { id: 'p5', title: 'Enforce hash lock after Auditor sign-off', desc: 'Seal document state in immutable registry ledger once compliance audit completes.', enabled: true, category: 'Blockchain Security' }
 ];
 
-const THRESHOLDS = [
-  { id: 't1', label: 'Auto-validate confidence threshold', desc: 'Fields at or above this score skip manual review entirely.', value: 95, unit: '%' },
-  { id: 't2', label: 'Review-required flag threshold', desc: 'Fields below this score are flagged for operator review.', value: 75, unit: '%' },
-  { id: 't3', label: 'Duplicate record sensitivity', desc: 'How aggressively the system flags possible duplicate survey entries.', value: 60, unit: '%' },
-  { id: 't4', label: 'Minimum OCR quality score', desc: 'Scans below this score are sent back for re-capture.', value: 55, unit: '%' },
+const INITIAL_THRESHOLDS = [
+  { id: 't1', name: 'Auto-validate Confidence Threshold', value: 95, unit: '%', desc: 'Fields at or above this score are auto-verified without manual verification.' },
+  { id: 't2', name: 'Review-Required Escalation Bar', value: 75, unit: '%', desc: 'Fields below this score are automatically queued for operator review.' },
+  { id: 't3', name: 'Duplicate Record Sensitivity', value: 60, unit: '%', desc: 'Aggressiveness of the AI spatial model in flagging duplicate survey subdivision polygons.' },
+  { id: 't4', name: 'Minimum OCR Quality Score', value: 55, unit: '%', desc: 'Scans below this quality are flagged for high-resolution re-scanning.' }
 ];
-
-const ACTIVITY = [
-  { t: '9:41 AM', text: 'State GIS API entered syncing state — re-indexing Erode district polygons' },
-  { t: '9:10 AM', text: 'Statewide digitization crossed 1.2M records' },
-  { t: '8:55 AM', text: 'Cuddalore flagged — digitization progress below 40% threshold' },
-  { t: '8:20 AM', text: 'Confidence threshold updated: Auto-validate raised to 95%' },
-];
-
-const NAV = [
-  { group: 'Main', items: [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }] },
-  { group: 'State View', items: [
-    { id: 'leaderboard', label: 'District Leaderboard', icon: Trophy },
-    { id: 'progress', label: 'Statewide Progress', icon: TrendingUp },
-  ] },
-  { group: 'Integrations', items: [
-    { id: 'lrms', label: 'LRMS Status', icon: Radio },
-    { id: 'gis', label: 'GIS Status', icon: MapIcon },
-    { id: 'sync', label: 'Database Sync', icon: Database },
-  ] },
-  { group: 'Configuration', items: [
-    { id: 'policies', label: 'System Policies', icon: ShieldCheck },
-    { id: 'thresholds', label: 'Thresholds', icon: SlidersHorizontal },
-  ] },
-];
-
-/* =========================================================================
-   HELPERS
-   ========================================================================= */
-
-function fmtNum(n) { return n.toLocaleString('en-IN'); }
-
-function progressTone(p) {
-  if (p >= 70) return 'green';
-  if (p >= 50) return 'ink';
-  return 'rust';
-}
-
-const STATUS_META = {
-  connected: { label: 'Connected', tone: 'green', dot: '#2F4A3D' },
-  syncing:   { label: 'Syncing',   tone: 'ink',   dot: '#8A6D1E' },
-  offline:   { label: 'Offline',   tone: 'rust',  dot: '#C1502E' },
-};
-
-function IntegrationBadge({ status }) {
-  const meta = STATUS_META[status] || STATUS_META.offline;
-  return <span className={`badge badge-${meta.tone}`}><span className="status-dot" style={{ background: meta.dot }} />{meta.label}</span>;
-}
-
-/* =========================================================================
-   ROOT COMPONENT
-   ========================================================================= */
 
 export default function StateNodalOfficerDashboard({ userName = 'State Nodal Officer', onLogout = () => {}, addToast = () => {} }) {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
+  const [selectedState, setSelectedState] = useState('Tamil Nadu');
+  
+  // Modals
+  const [heatmapModalOpen, setHeatmapModalOpen] = useState(false);
+  const [manageKeysModalOpen, setManageKeysModalOpen] = useState(false);
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
+  
+  // State management
+  const [policies, setPolicies] = useState(INITIAL_POLICIES);
+  const [thresholds, setThresholds] = useState(INITIAL_THRESHOLDS);
+  const [apiKeys, setApiKeys] = useState([
+    { id: 'KEY-LRMS-902', name: 'LRMS Production Sync Token', key: 'tn_live_9a8f7c6e5d4b3a2f1e0d', created: '12 Aug 2026', status: 'Active' },
+    { id: 'KEY-GIS-418', name: 'State GIS GeoServer Key', key: 'tn_live_1b2c3d4e5f6a7b8c9d0e', created: '20 Jul 2026', status: 'Active' },
+    { id: 'KEY-ARCH-110', name: 'Archive DB Readonly Key', key: 'tn_live_fe8d7c6b5a4321098765', created: '01 Jun 2026', status: 'Active' }
+  ]);
+  const [broadcastMsg, setBroadcastMsg] = useState({ title: '', priority: 'High', audience: 'All Districts', body: '' });
+
   useEffect(() => {
-    if (document.getElementById('op-dash-fonts')) return;
+    if (document.getElementById('sno-dash-fonts')) return;
     const link = document.createElement('link');
-    link.id = 'op-dash-fonts';
+    link.id = 'sno-dash-fonts';
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap';
     document.head.appendChild(link);
   }, []);
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [policies, setPolicies] = useState(POLICIES);
-  const [thresholds, setThresholds] = useState(THRESHOLDS);
-  const [activity, setActivity] = useState(ACTIVITY);
-  const [broadcastOpen, setBroadcastOpen] = useState(false);
-  const [broadcastMsg, setBroadcastMsg] = useState('');
-  const [keysOpen, setKeysOpen] = useState(false);
-
-  function pushActivity(text) {
-    const d = new Date();
-    let h = d.getHours(), m = d.getMinutes();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    setActivity(a => [{ t: `${h}:${String(m).padStart(2, '0')} ${ampm}`, text }, ...a]);
-  }
-
   function togglePolicy(id) {
-    setPolicies(ps => ps.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
-    const p = policies.find(p => p.id === id);
-    addToast(`${p.label} ${p.enabled ? 'disabled' : 'enabled'}.`, 'success');
-    pushActivity(`Policy "${p.label}" ${p.enabled ? 'disabled' : 'enabled'} statewide`);
+    setPolicies(prev => prev.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
+    addToast('Policy updated successfully', 'success');
   }
 
-  function updateThreshold(id, value) {
-    setThresholds(ts => ts.map(t => t.id === id ? { ...t, value } : t));
+  function handleThresholdChange(id, val) {
+    setThresholds(prev => prev.map(t => t.id === id ? { ...t, value: Number(val) } : t));
   }
 
-  function saveThresholds() {
-    addToast('Thresholds updated statewide.', 'success');
-    pushActivity('AI thresholds reconfigured by State Nodal Officer');
-  }
-
-  function sendBroadcast() {
-    if (!broadcastMsg.trim()) { addToast('Write a message before broadcasting.'); return; }
-    addToast('Message broadcast to all districts.', 'success');
-    pushActivity(`Broadcast sent to all districts: "${broadcastMsg.slice(0, 60)}${broadcastMsg.length > 60 ? '…' : ''}"`);
-    setBroadcastMsg('');
-    setBroadcastOpen(false);
-  }
-
-  const totalDigitized = DISTRICTS.reduce((s, d) => s + d.digitized, 0);
-  const avgProgress = Math.round(DISTRICTS.reduce((s, d) => s + d.progress, 0) / DISTRICTS.length);
-  const avgDiscrepancy = (DISTRICTS.reduce((s, d) => s + d.discrepancy, 0) / DISTRICTS.length).toFixed(1);
-  const onlineCount = INTEGRATIONS.filter(i => i.status === 'connected').length;
-  const rankedDistricts = [...DISTRICTS].sort((a, b) => b.progress - a.progress);
-
-  /* ---------------------------------------------------------------------
-     PAGE RENDERERS
-     --------------------------------------------------------------------- */
-
-  function renderDashboard() {
-    return (
-      <>
-        <PageHead title={`Good Morning, ${userName} 👋`} sub="Statewide digitization status across Tamil Nadu." />
-        <div className="kpi-grid">
-          <KPI label="Total Digitized (State)" val={`${(totalDigitized / 1e6).toFixed(1)}M`} icon={Database} />
-          <KPI label="Active Integrations" val={`${onlineCount} / ${INTEGRATIONS.length} Online`} icon={Wifi} tone={onlineCount === INTEGRATIONS.length ? 'green' : 'rust'} />
-          <KPI label="AI Discrepancy Rate" val={`${avgDiscrepancy}%`} icon={AlertTriangle} tone="rust" />
-          <KPI label="Statewide Target" val={`${avgProgress}%`} icon={TrendingUp} progress={avgProgress} />
-        </div>
-
-        <div className="grid-2">
-          <div className="panel">
-            <div className="panel-head"><h3>DISTRICT PROGRESS</h3><button className="btn btn-ghost btn-sm" onClick={() => setActiveTab('progress')}>Full view →</button></div>
-            <div className="panel-body">
-              <div className="heatbar-list">
-                {rankedDistricts.slice(0, 8).map(d => (
-                  <div key={d.name} className="heatbar-row">
-                    <span className="hb-name">{d.name}</span>
-                    <div className="hb-track"><div className={`hb-fill tone-${progressTone(d.progress)}`} style={{ width: `${d.progress}%` }} /></div>
-                    <span className="hb-val mono">{d.progress}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-head"><h3>INTEGRATION HEALTH</h3></div>
-            <div className="panel-body">
-              <div className="integration-list">
-                {INTEGRATIONS.map(i => (
-                  <div key={i.id} className="integration-row" onClick={() => setActiveTab(i.id)}>
-                    <div>
-                      <b>{i.name}</b>
-                      <span className="int-sub">{i.lastSync}</span>
-                    </div>
-                    <IntegrationBadge status={i.status} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel" style={{ marginTop: 16 }}>
-          <div className="panel-head"><h3>QUICK ACTIONS</h3></div>
-          <div className="panel-body quick-actions quick-actions-row">
-            <button className="qa-btn" onClick={() => setActiveTab('progress')}><MapIcon size={17} /> View State Heatmap</button>
-            <button className="qa-btn" onClick={() => setKeysOpen(true)}><Key size={17} /> Manage Integration Keys</button>
-            <button className="qa-btn" onClick={() => setBroadcastOpen(true)}><Megaphone size={17} /> Broadcast Message to Districts</button>
-          </div>
-        </div>
-
-        <div className="panel" style={{ marginTop: 16 }}>
-          <div className="panel-head"><h3>RECENT STATE ACTIVITY</h3></div>
-          <div className="panel-body timeline">
-            {activity.slice(0, 4).map((a, i) => (
-              <div key={i} className="tl-item"><div className="tl-dot" /><div><b>{a.text}</b><span>{a.t}</span></div></div>
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderLeaderboard() {
-    return (
-      <>
-        <PageHead title="District Leaderboard" sub="Districts ranked by digitization progress." />
-        <div className="panel">
-          <div className="panel-body">
-            <table>
-              <thead><tr><th>Rank</th><th>District</th><th>Records Digitized</th><th>Progress</th><th>Discrepancy Rate</th><th>Trend (7d)</th></tr></thead>
-              <tbody>
-                {rankedDistricts.map((d, i) => (
-                  <tr key={d.name}>
-                    <td className="mono">#{i + 1}</td>
-                    <td><b>{d.name}</b></td>
-                    <td className="mono">{fmtNum(d.digitized)}</td>
-                    <td>
-                      <div className="hb-track" style={{ maxWidth: 120, display: 'inline-block', marginRight: 8, verticalAlign: 'middle' }}>
-                        <div className={`hb-fill tone-${progressTone(d.progress)}`} style={{ width: `${d.progress}%` }} />
-                      </div>
-                      <span className="mono">{d.progress}%</span>
-                    </td>
-                    <td className={`conf ${d.discrepancy > 8 ? 'low' : d.discrepancy > 5 ? 'mid' : 'high'}`}>{d.discrepancy}%</td>
-                    <td>
-                      <span className={`trend ${d.trend >= 0 ? 'up' : 'down'}`}>
-                        {d.trend >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />} {Math.abs(d.trend)}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderProgress() {
-    return (
-      <>
-        <PageHead title="Statewide Progress" sub="Digitization progress across every district in Tamil Nadu."
-                  rightBtn={<button className="btn btn-primary" onClick={() => setBroadcastOpen(true)}><Megaphone size={15} /> Broadcast Update</button>} />
-        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-          <KPI label="Statewide Average" val={`${avgProgress}%`} icon={TrendingUp} progress={avgProgress} />
-          <KPI label="Districts Above 70%" val={DISTRICTS.filter(d => d.progress >= 70).length} icon={CheckCircle2} tone="green" />
-          <KPI label="Districts Below 40%" val={DISTRICTS.filter(d => d.progress < 40).length} icon={AlertTriangle} tone="rust" />
-          <KPI label="Total Records" val={fmtNum(totalDigitized)} icon={Database} />
-        </div>
-        <div className="panel">
-          <div className="panel-head"><h3>STATE HEATMAP — DIGITIZATION PROGRESS</h3></div>
-          <div className="panel-body">
-            <div className="heatbar-list">
-              {rankedDistricts.map(d => (
-                <div key={d.name} className="heatbar-row">
-                  <span className="hb-name">{d.name}</span>
-                  <div className="hb-track"><div className={`hb-fill tone-${progressTone(d.progress)}`} style={{ width: `${d.progress}%` }} /></div>
-                  <span className="hb-val mono">{d.progress}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderIntegrationDetail(id) {
-    const i = INTEGRATIONS.find(x => x.id === id);
-    if (!i) return null;
-    return (
-      <>
-        <PageHead title={i.name} sub={i.full} />
-        <div className="grid-2">
-          <div className="panel">
-            <div className="panel-head"><h3>CONNECTION STATUS</h3><IntegrationBadge status={i.status} /></div>
-            <div className="panel-body">
-              <p className="muted" style={{ marginBottom: 18 }}>{i.desc}</p>
-              <div className="extract-row"><span className="k">Endpoint</span><span className="v mono">{i.endpoint}</span></div>
-              <div className="extract-row"><span className="k">Uptime (30d)</span><span className="v mono">{i.uptime}%</span></div>
-              <div className="extract-row"><span className="k">Latency</span><span className="v mono">{i.latency}</span></div>
-              <div className="extract-row"><span className="k">Last Sync</span><span className="v mono">{i.lastSync}</span></div>
-              <button className="btn btn-outline btn-sm" style={{ marginTop: 16 }}
-                      onClick={() => { addToast(`${i.name} sync triggered.`, 'success'); pushActivity(`Manual sync triggered for ${i.name}`); }}>
-                <RefreshCw size={14} /> Trigger Manual Sync
-              </button>
-            </div>
-          </div>
-          <div className="panel">
-            <div className="panel-head"><h3>ALL INTEGRATIONS</h3></div>
-            <div className="panel-body">
-              <div className="integration-list">
-                {INTEGRATIONS.map(x => (
-                  <div key={x.id} className={`integration-row ${x.id === id ? 'active-row' : ''}`} onClick={() => setActiveTab(x.id)}>
-                    <div><b>{x.name}</b><span className="int-sub">{x.lastSync}</span></div>
-                    <IntegrationBadge status={x.status} />
-                  </div>
-                ))}
-              </div>
-              <button className="btn btn-outline btn-block" style={{ marginTop: 16 }} onClick={() => setKeysOpen(true)}>
-                <Key size={15} /> Manage Integration Keys
-              </button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderPolicies() {
-    return (
-      <>
-        <PageHead title="System Policies" sub="Statewide rules that govern how digitization and verification work." />
-        <div className="panel">
-          <div className="panel-body">
-            <div className="policy-list">
-              {policies.map(p => (
-                <div key={p.id} className="policy-row">
-                  <div>
-                    <b>{p.label}</b>
-                    <span className="int-sub">{p.desc}</span>
-                  </div>
-                  <button className={`toggle ${p.enabled ? 'on' : ''}`} onClick={() => togglePolicy(p.id)}>
-                    <span className="toggle-knob" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderThresholds() {
-    return (
-      <>
-        <PageHead title="Thresholds" sub="Tune the AI confidence bands used across every district."
-                  rightBtn={<button className="btn btn-primary" onClick={saveThresholds}><CheckCircle2 size={15} /> Save Changes</button>} />
-        <div className="panel">
-          <div className="panel-body">
-            <div className="threshold-list">
-              {thresholds.map(t => (
-                <div key={t.id} className="threshold-row">
-                  <div className="th-top">
-                    <div>
-                      <b>{t.label}</b>
-                      <span className="int-sub">{t.desc}</span>
-                    </div>
-                    <span className="th-val mono">{t.value}{t.unit}</span>
-                  </div>
-                  <input type="range" min="0" max="100" value={t.value}
-                         onChange={e => updateThreshold(t.id, Number(e.target.value))}
-                         className="th-slider" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderSettings() {
-    return (
-      <>
-        <PageHead title="Settings" sub="Your account preferences." />
-        <div className="panel"><div className="panel-body">
-          <div className="field"><label>Name</label><input type="text" defaultValue={userName} /></div>
-          <div className="field"><label>Role</label><input type="text" defaultValue="State Nodal Officer" disabled /></div>
-          <button className="btn btn-primary" onClick={() => addToast('Settings saved.', 'success')}>Save Changes</button>
-        </div></div>
-      </>
-    );
-  }
-
-  function renderContent() {
-    switch (activeTab) {
-      case 'dashboard': return renderDashboard();
-      case 'leaderboard': return renderLeaderboard();
-      case 'progress': return renderProgress();
-      case 'lrms': return renderIntegrationDetail('lrms');
-      case 'gis': return renderIntegrationDetail('gis');
-      case 'sync': return renderIntegrationDetail('legacy');
-      case 'policies': return renderPolicies();
-      case 'thresholds': return renderThresholds();
-      case 'settings': return renderSettings();
-      default: return null;
+  function handleSendBroadcast(e) {
+    e.preventDefault();
+    if (!broadcastMsg.title || !broadcastMsg.body) {
+      addToast('Please fill in broadcast title and message', 'error');
+      return;
     }
+    addToast(`Broadcast dispatched to ${broadcastMsg.audience}`, 'success');
+    setBroadcastModalOpen(false);
+    setBroadcastMsg({ title: '', priority: 'High', audience: 'All Districts', body: '' });
   }
-
-  /* ---------------------------------------------------------------------
-     LAYOUT
-     --------------------------------------------------------------------- */
 
   return (
-    <div className="op-dash">
-      <style>{CSS}</style>
+    <div className="sno-root">
+      <style>{STATE_NODAL_STYLES}</style>
 
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} no-print`}>
-        <div className="sb-top">
-          <div className="brand">
-            <div className="brand-mark">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M4 20V10L12 4L20 10V20" stroke="white" strokeWidth="1.8" strokeLinejoin="round" />
-                <path d="M9 20V14H15V20" stroke="white" strokeWidth="1.8" />
-              </svg>
+      {/* =====================================================================
+          SIDEBAR NAVIGATION (Darker Mint Green #c5ebd7 -> #b2dfc8)
+          ===================================================================== */}
+      <aside className="sno-sidebar">
+        <div className="sno-sidebar-top">
+          {/* Brand Logo */}
+          <div className="sno-brand" onClick={() => setActiveTab('dashboard')}>
+            <div className="sno-brand-logo-wrap">
+              <img src={logoImg} alt="NilOra" className="sno-logo-img" />
             </div>
-            {!collapsed && <span className="brand-name">Land<em>Intel</em></span>}
+            <div className="sno-brand-text-col">
+              <span className="sno-brand-title">Nilora</span>
+              <span className="sno-brand-sub">LAND RECORDS AT ORIGIN</span>
+            </div>
           </div>
-          <button className="sb-toggle" onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-            {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
-          </button>
+
+          {/* Navigation Groups */}
+          <nav className="sno-nav">
+            {/* MAIN */}
+            <div className="sno-nav-group">
+              <button
+                className={`sno-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard')}
+              >
+                <LayoutDashboard size={18} />
+                <span>Dashboard</span>
+              </button>
+              <button
+                className={`sno-nav-item ${activeTab === 'leaderboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('leaderboard')}
+              >
+                <Trophy size={18} />
+                <span>District Leaderboard</span>
+              </button>
+              <button
+                className={`sno-nav-item ${activeTab === 'statewide' ? 'active' : ''}`}
+                onClick={() => setActiveTab('statewide')}
+              >
+                <TrendingUp size={18} />
+                <span>Statewide Progress</span>
+              </button>
+            </div>
+
+            {/* INTEGRATIONS */}
+            <div className="sno-nav-group">
+              <div className="sno-nav-label">INTEGRATIONS</div>
+              <button
+                className={`sno-nav-item ${activeTab === 'lrms' ? 'active' : ''}`}
+                onClick={() => setActiveTab('lrms')}
+              >
+                <Radio size={18} />
+                <span>LRMS Status</span>
+              </button>
+              <button
+                className={`sno-nav-item ${activeTab === 'gis' ? 'active' : ''}`}
+                onClick={() => setActiveTab('gis')}
+              >
+                <MapIcon size={18} />
+                <span>GIS Status</span>
+              </button>
+              <button
+                className={`sno-nav-item ${activeTab === 'db' ? 'active' : ''}`}
+                onClick={() => setActiveTab('db')}
+              >
+                <Database size={18} />
+                <span>Database Sync</span>
+              </button>
+            </div>
+
+            {/* CONFIGURATION */}
+            <div className="sno-nav-group">
+              <div className="sno-nav-label">CONFIGURATION</div>
+              <button
+                className={`sno-nav-item ${activeTab === 'policies' ? 'active' : ''}`}
+                onClick={() => setActiveTab('policies')}
+              >
+                <ShieldCheck size={18} />
+                <span>System Policies</span>
+              </button>
+              <button
+                className={`sno-nav-item ${activeTab === 'thresholds' ? 'active' : ''}`}
+                onClick={() => setActiveTab('thresholds')}
+              >
+                <SlidersHorizontal size={18} />
+                <span>Thresholds</span>
+              </button>
+            </div>
+          </nav>
         </div>
 
-        <nav className="sb-nav">
-          {NAV.map(g => (
-            <div key={g.group} className="sb-group">
-              {!collapsed && <div className="sb-group-label">{g.group}</div>}
-              {g.items.map(item => {
-                const Icon = item.icon;
-                const active = activeTab === item.id;
-                return (
-                  <button key={item.id} className={`sb-item ${active ? 'active' : ''}`} onClick={() => setActiveTab(item.id)} title={collapsed ? item.label : undefined}>
-                    <Icon size={17} />
-                    {!collapsed && <span>{item.label}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        <div className="sb-bottom">
-          <button className={`sb-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} title={collapsed ? 'Settings' : undefined}>
-            <SettingsIcon size={17} />{!collapsed && <span>Settings</span>}
+        {/* Bottom Nav */}
+        <div className="sno-sidebar-bottom">
+          <button
+            className={`sno-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <SettingsIcon size={18} />
+            <span>Settings</span>
           </button>
-          <button className="sb-item" onClick={onLogout} title={collapsed ? 'Logout' : undefined}>
-            <LogOut size={17} />{!collapsed && <span>Logout</span>}
+          <button className="sno-nav-item" onClick={onLogout}>
+            <LogOut size={18} />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      <div className="main">
-        <header className="topbar no-print">
-          <div className="tb-left">
-            <span className="tb-title">LandIntel</span>
-            <span className="tb-chip">State Nodal Officer</span>
+      {/* =====================================================================
+          MAIN CONTENT WRAPPER
+          ===================================================================== */}
+      <div className="sno-main-wrapper">
+        {/* Top Header */}
+        <header className="sno-header">
+          {/* Breadcrumb & State Selector */}
+          <div className="sno-breadcrumb-wrap">
+            <div className="sno-bc-root">
+              <MapPin size={16} className="text-emerald" />
+              <span>State Nodal Officer</span>
+            </div>
+            <span className="sno-bc-sep">&gt;</span>
+            <div className="sno-state-selector">
+              <button
+                className="sno-state-btn"
+                onClick={() => setStateDropdownOpen(!stateDropdownOpen)}
+              >
+                <b>{selectedState}</b>
+                <ChevronDown size={15} />
+              </button>
+              {stateDropdownOpen && (
+                <div className="sno-state-dropdown">
+                  {['Tamil Nadu', 'Karnataka', 'Kerala', 'Andhra Pradesh'].map(st => (
+                    <button
+                      key={st}
+                      className={`sno-state-item ${selectedState === st ? 'active' : ''}`}
+                      onClick={() => {
+                        setSelectedState(st);
+                        setStateDropdownOpen(false);
+                        addToast(`Switched view to ${st}`, 'info');
+                      }}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="tb-right">
-            <div className="tb-search"><Search size={14} /><input placeholder="Search districts, integrations…" /></div>
-            <div className="tb-user"><MapPin size={13} /> {userName}</div>
+
+          {/* Right Header Controls */}
+          <div className="sno-header-right">
+            {/* Search Pill */}
+            <div className="sno-search-pill">
+              <Search size={16} className="text-muted" />
+              <input
+                type="text"
+                placeholder="Search districts, integrations..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Notification Bell */}
+            <div className="relative">
+              <button className="sno-icon-btn" onClick={() => setNotifOpen(!notifOpen)}>
+                <Bell size={18} />
+                <span className="sno-bell-dot" />
+              </button>
+              {notifOpen && (
+                <div className="sno-dropdown sno-notif-dd">
+                  <div className="sno-dd-head">
+                    <b>State Alerts</b>
+                    <span className="sno-pill-sm">3 New</span>
+                  </div>
+                  <div className="sno-notif-item">
+                    <div className="notif-t">LRMS API Latency Spike</div>
+                    <div className="notif-s">Tiruchirapalli gateway latency touched 412ms</div>
+                    <div className="notif-tm">10 mins ago</div>
+                  </div>
+                  <div className="sno-notif-item">
+                    <div className="notif-t">Chennai Milestone Reached</div>
+                    <div className="notif-s">92% cadastral records successfully verified</div>
+                    <div className="notif-tm">1 hour ago</div>
+                  </div>
+                  <div className="sno-notif-item">
+                    <div className="notif-t">New Policy Deployed</div>
+                    <div className="notif-s">Dual-verification rule active across all 38 districts</div>
+                    <div className="notif-tm">4 hours ago</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User Profile Avatar */}
+            <div className="relative">
+              <button className="sno-user-pill" onClick={() => setProfileOpen(!profileOpen)}>
+                <div className="sno-avatar">SN</div>
+                <ChevronDown size={14} className="text-muted" />
+              </button>
+              {profileOpen && (
+                <div className="sno-dropdown sno-profile-dd">
+                  <div className="sno-dd-user">
+                    <b>State Nodal Officer</b>
+                    <span>nodal.tn@gov.in</span>
+                  </div>
+                  <div className="sno-dd-divider" />
+                  <button className="sno-dd-item" onClick={() => { setActiveTab('settings'); setProfileOpen(false); }}>
+                    <SettingsIcon size={14} /> Account Settings
+                  </button>
+                  <button className="sno-dd-item danger" onClick={onLogout}>
+                    <LogOut size={14} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
-        <div className="page">{renderContent()}</div>
-      </div>
 
-      {broadcastOpen && (
-        <div className="modal-overlay" onClick={() => setBroadcastOpen(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-head">
-              <div><h3>Broadcast Message</h3><p>Sent to every district's admin and verification team.</p></div>
-              <button className="modal-close" onClick={() => setBroadcastOpen(false)}><X size={16} /></button>
-            </div>
-            <div className="modal-body">
-              <div className="field">
-                <label>Message</label>
-                <textarea rows={5} value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)}
-                          placeholder="e.g. All districts must complete Q3 backlog digitization by the 15th."
-                          style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--line-strong)', borderRadius: 2, fontFamily: 'inherit', fontSize: '13.5px', resize: 'vertical' }} />
+        {/* ===================================================================
+            STAGE VIEW: DASHBOARD TAB
+            =================================================================== */}
+        {activeTab === 'dashboard' && (
+          <div className="sno-content-stage">
+            {/* Hero Row */}
+            <div className="sno-hero-row">
+              <div className="sno-hero-text">
+                <h1 className="sno-title">Welcome Back</h1>
+                <p className="sno-subtitle">State Nodal Officer</p>
               </div>
-              <button className="btn btn-primary btn-block" onClick={sendBroadcast}><Send size={15} /> Send to All Districts</button>
+              <div className="sno-date-card">
+                <div className="sno-date-ic">
+                  <Clock size={20} className="text-emerald" />
+                </div>
+                <div className="sno-date-text">
+                  <span className="sno-date-num">Wed, 03 Sep 2026</span>
+                  <span className="sno-day">Wednesday</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Top KPI Cards Grid */}
+            <div className="sno-kpi-grid">
+              {/* Card 1: Donut Target */}
+              <div className="sno-kpi-card" onClick={() => setActiveTab('statewide')}>
+                <div className="kpi-donut-metric">
+                  <div className="donut-circle-wrap">
+                    <svg viewBox="0 0 36 36" className="donut-ring-svg">
+                      <path
+                        className="donut-ring-bg"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        className="donut-ring-val"
+                        strokeDasharray="61, 100"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <div className="donut-center-pct">61%</div>
+                  </div>
+                  <div className="donut-info">
+                    <div className="donut-title">Statewide Target</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Total Digitized */}
+              <div className="sno-kpi-card" onClick={() => setActiveTab('leaderboard')}>
+                <div className="kpi-card-inner">
+                  <div className="kpi-icon-box bg-mint">
+                    <Database size={20} className="text-emerald" />
+                  </div>
+                  <div className="kpi-text-block">
+                    <div className="kpi-val">1.0M</div>
+                    <div className="kpi-lbl">Total Digitized (State)</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Active Integrations */}
+              <div className="sno-kpi-card" onClick={() => setActiveTab('lrms')}>
+                <div className="kpi-card-inner">
+                  <div className="kpi-icon-box bg-sky">
+                    <Wifi size={20} className="text-sky" />
+                  </div>
+                  <div className="kpi-text-block">
+                    <div className="kpi-val">2 / 3</div>
+                    <div className="kpi-lbl">Active Integrations</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: AI Discrepancy Rate */}
+              <div className="sno-kpi-card">
+                <div className="kpi-card-inner">
+                  <div className="kpi-icon-box bg-amber">
+                    <AlertTriangle size={20} className="text-amber" />
+                  </div>
+                  <div className="kpi-text-block">
+                    <div className="kpi-val">7.9%</div>
+                    <div className="kpi-lbl">AI Discrepancy Rate</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Row (District Progress & Integration Health) */}
+            <div className="sno-middle-grid">
+              {/* Left Card: District Progress */}
+              <div className="sno-card">
+                <div className="sno-card-head">
+                  <div className="sno-card-title">District Progress</div>
+                  <button className="sno-link-btn" onClick={() => setActiveTab('leaderboard')}>
+                    Full view →
+                  </button>
+                </div>
+                <div className="sno-progress-list">
+                  {DISTRICT_PROGRESS_DATA.slice(0, 5).map(dist => (
+                    <div key={dist.name} className="sno-dist-row">
+                      <span className="dist-name">{dist.name}</span>
+                      <div className="dist-bar-track">
+                        <div className="dist-bar-fill" style={{ width: `${dist.progress}%` }} />
+                      </div>
+                      <span className="dist-pct">{dist.progress}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Card: Integration Health */}
+              <div className="sno-card">
+                <div className="sno-card-head">
+                  <div className="sno-card-title">Integration Health</div>
+                </div>
+                <div className="sno-integrations-list">
+                  {INTEGRATIONS_HEALTH.map(int => (
+                    <div key={int.id} className="sno-integ-row">
+                      <div className="integ-left">
+                        <div className="integ-icon-box">
+                          {int.id === 'lrms' ? <Database size={18} /> : int.id === 'gis' ? <MapIcon size={18} /> : <Layers size={18} />}
+                        </div>
+                        <div className="integ-meta">
+                          <b className="integ-name">{int.name}</b>
+                          <span className="integ-sub">{int.subtitle}</span>
+                        </div>
+                      </div>
+                      <div className={`integ-pill ${int.statusTone}`}>
+                        <span className="integ-dot" />
+                        <span>{int.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row (3 Wide CTAs) */}
+            <div className="sno-actions-grid">
+              <button className="sno-cta-btn" onClick={() => setHeatmapModalOpen(true)}>
+                <MapIcon size={20} />
+                <span>View State Heatmap</span>
+                <ChevronRight size={18} className="cta-arrow" />
+              </button>
+              <button className="sno-cta-btn" onClick={() => setManageKeysModalOpen(true)}>
+                <Key size={20} />
+                <span>Manage Integration Keys</span>
+                <ChevronRight size={18} className="cta-arrow" />
+              </button>
+              <button className="sno-cta-btn" onClick={() => setBroadcastModalOpen(true)}>
+                <Send size={20} />
+                <span>Broadcast Message to Districts</span>
+                <ChevronRight size={18} className="cta-arrow" />
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {keysOpen && (
-        <div className="modal-overlay" onClick={() => setKeysOpen(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-head">
-              <div><h3>Manage Integration Keys</h3><p>API credentials used to connect to external government systems.</p></div>
-              <button className="modal-close" onClick={() => setKeysOpen(false)}><X size={16} /></button>
+        {/* ===================================================================
+            SUB-VIEW: DISTRICT LEADERBOARD
+            =================================================================== */}
+        {activeTab === 'leaderboard' && (
+          <div className="sno-content-stage">
+            <div className="sno-card">
+              <div className="sno-card-head">
+                <div>
+                  <h2 className="sno-card-title">Statewide District Leaderboard</h2>
+                  <p className="sno-card-sub">Ranked performance across all 38 revenue districts in Tamil Nadu.</p>
+                </div>
+                <button className="sno-btn-primary" onClick={() => addToast('Leaderboard exported to CSV', 'success')}>
+                  <Download size={15} /> Export Report
+                </button>
+              </div>
+
+              <div className="sno-table-wrap">
+                <table className="sno-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>District</th>
+                      <th>Digitization Progress</th>
+                      <th>Total Records</th>
+                      <th>Discrepancy Rate</th>
+                      <th>30-Day Trend</th>
+                      <th>Active Officers</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {DISTRICT_PROGRESS_DATA.map((dist, idx) => (
+                      <tr key={dist.name}>
+                        <td><b className="rank-num">#{idx + 1}</b></td>
+                        <td><b>{dist.name}</b></td>
+                        <td>
+                          <div className="table-bar-cell">
+                            <div className="tbl-track">
+                              <div className="tbl-fill" style={{ width: `${dist.progress}%` }} />
+                            </div>
+                            <span>{dist.progress}%</span>
+                          </div>
+                        </td>
+                        <td className="mono">{dist.digitized}</td>
+                        <td className="mono">{dist.discrepancy}%</td>
+                        <td><span className={dist.trend.startsWith('+') ? 'text-emerald font-bold' : 'text-amber font-bold'}>{dist.trend}</span></td>
+                        <td>{dist.officers} Officers</td>
+                        <td>
+                          <span className={`status-badge badge-${dist.status.toLowerCase().replace(' ', '-')}`}>
+                            {dist.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="modal-body">
-              <div className="policy-list">
-                {INTEGRATIONS.map(i => (
-                  <div key={i.id} className="policy-row">
-                    <div>
-                      <b>{i.name}</b>
-                      <span className="int-sub mono">•••• •••• •••• {i.id.slice(0, 4).toUpperCase()}</span>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: STATEWIDE PROGRESS
+            =================================================================== */}
+        {activeTab === 'statewide' && (
+          <div className="sno-content-stage">
+            <div className="sno-card">
+              <div className="sno-card-head">
+                <div>
+                  <h2 className="sno-card-title">Statewide GIS & Digitization Analytics</h2>
+                  <p className="sno-card-sub">Real-time cadastral ingestion vs ground truth validation targets.</p>
+                </div>
+              </div>
+
+              <div style={{ height: 380, borderRadius: 12, overflow: 'hidden', border: '1.5px solid #a3dec0', marginTop: 16 }}>
+                <RealCadastralMap height="100%" selectedParcelId="STATE-TN" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: INTEGRATIONS (LRMS, GIS, DB)
+            =================================================================== */}
+        {(activeTab === 'lrms' || activeTab === 'gis' || activeTab === 'db') && (
+          <div className="sno-content-stage">
+            <div className="sno-card">
+              <div className="sno-card-head">
+                <div>
+                  <h2 className="sno-card-title">Integration Hub & Sync Gateways</h2>
+                  <p className="sno-card-sub">API endpoints, webhook delivery status, and state registry feeds.</p>
+                </div>
+                <button className="sno-btn-primary" onClick={() => addToast('Pinging all integration gateways...', 'info')}>
+                  <RefreshCw size={15} /> Ping Gateways
+                </button>
+              </div>
+
+              <div className="sno-integrations-detail-grid">
+                {INTEGRATIONS_HEALTH.map(int => (
+                  <div key={int.id} className="sno-integ-detail-card">
+                    <div className="int-head">
+                      <div className="int-title-row">
+                        <b className="int-name">{int.name}</b>
+                        <span className={`integ-pill ${int.statusTone}`}>{int.status}</span>
+                      </div>
+                      <span className="int-ep mono">{int.endpoint}</span>
                     </div>
-                    <button className="btn btn-outline btn-sm"
-                            onClick={() => { addToast(`${i.name} key rotated.`, 'success'); pushActivity(`API key rotated for ${i.name}`); }}>
-                      Rotate Key
+                    <div className="int-stats-grid">
+                      <div><span className="lbl">Uptime</span><b>{int.uptime}</b></div>
+                      <div><span className="lbl">Latency</span><b>{int.latency}</b></div>
+                      <div><span className="lbl">Records Synced</span><b>{int.recordsSynced}</b></div>
+                      <div><span className="lbl">Last Handshake</span><b>{int.subtitle}</b></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: SYSTEM POLICIES
+            =================================================================== */}
+        {activeTab === 'policies' && (
+          <div className="sno-content-stage">
+            <div className="sno-card">
+              <div className="sno-card-head">
+                <div>
+                  <h2 className="sno-card-title">Statewide System Policies & Verification Rules</h2>
+                  <p className="sno-card-sub">Enforce governance mandates and compliance thresholds state-wide.</p>
+                </div>
+              </div>
+
+              <div className="sno-policies-list">
+                {policies.map(p => (
+                  <div key={p.id} className="sno-policy-row">
+                    <div className="policy-info">
+                      <div className="policy-cat">{p.category}</div>
+                      <b className="policy-title">{p.title}</b>
+                      <p className="policy-desc">{p.desc}</p>
+                    </div>
+                    <button
+                      className={`sno-toggle-btn ${p.enabled ? 'active' : ''}`}
+                      onClick={() => togglePolicy(p.id)}
+                    >
+                      <span className="toggle-slider" />
                     </button>
                   </div>
                 ))}
               </div>
             </div>
           </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: THRESHOLDS
+            =================================================================== */}
+        {activeTab === 'thresholds' && (
+          <div className="sno-content-stage">
+            <div className="sno-card">
+              <div className="sno-card-head">
+                <div>
+                  <h2 className="sno-card-title">AI Pipeline & Verification Thresholds</h2>
+                  <p className="sno-card-sub">Configure machine learning confidence parameters for automatic digitization.</p>
+                </div>
+              </div>
+
+              <div className="sno-thresholds-list">
+                {thresholds.map(t => (
+                  <div key={t.id} className="sno-thresh-row">
+                    <div className="thresh-info">
+                      <b className="thresh-name">{t.name}</b>
+                      <p className="thresh-desc">{t.desc}</p>
+                    </div>
+                    <div className="thresh-control">
+                      <input
+                        type="range"
+                        min="30"
+                        max="100"
+                        value={t.value}
+                        onChange={e => handleThresholdChange(t.id, e.target.value)}
+                        className="sno-range-slider"
+                      />
+                      <span className="thresh-val mono">{t.value}{t.unit}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: SETTINGS
+            =================================================================== */}
+        {activeTab === 'settings' && (
+          <div className="sno-content-stage">
+            <div className="sno-card">
+              <div className="sno-card-head">
+                <h2 className="sno-card-title">State Administration Settings</h2>
+              </div>
+              <form className="sno-form" onSubmit={e => { e.preventDefault(); addToast('Settings saved successfully', 'success'); }}>
+                <div className="form-group">
+                  <label>Officer Name</label>
+                  <input type="text" defaultValue={userName} />
+                </div>
+                <div className="form-group">
+                  <label>Official Email</label>
+                  <input type="email" defaultValue="nodal.tn@gov.in" />
+                </div>
+                <div className="form-group">
+                  <label>Default State Zone</label>
+                  <select defaultValue="Tamil Nadu">
+                    <option value="Tamil Nadu">Tamil Nadu (Headquarters)</option>
+                  </select>
+                </div>
+                <button type="submit" className="sno-btn-primary">Save Changes</button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* =====================================================================
+          MODAL 1: VIEW STATE HEATMAP
+          ===================================================================== */}
+      {heatmapModalOpen && (
+        <div className="sno-modal-overlay" onClick={() => setHeatmapModalOpen(false)}>
+          <div className="sno-modal-dialog large" onClick={e => e.stopPropagation()}>
+            <div className="sno-modal-head">
+              <div>
+                <span className="sno-modal-tag">GIS REVENUE OVERLAY</span>
+                <h3 className="sno-modal-title">Tamil Nadu Statewide Digitization Heatmap</h3>
+              </div>
+              <button className="sno-modal-close" onClick={() => setHeatmapModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="sno-modal-body">
+              <div style={{ height: 440, borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+                <RealCadastralMap height="100%" selectedParcelId="TN-HEATMAP" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 2: MANAGE INTEGRATION KEYS
+          ===================================================================== */}
+      {manageKeysModalOpen && (
+        <div className="sno-modal-overlay" onClick={() => setManageKeysModalOpen(false)}>
+          <div className="sno-modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="sno-modal-head">
+              <div>
+                <span className="sno-modal-tag">SECURITY &amp; ACCESS</span>
+                <h3 className="sno-modal-title">Manage API Integration Tokens</h3>
+              </div>
+              <button className="sno-modal-close" onClick={() => setManageKeysModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="sno-modal-body">
+              <div className="sno-keys-list">
+                {apiKeys.map(k => (
+                  <div key={k.id} className="sno-key-row">
+                    <div>
+                      <b className="key-name">{k.name}</b>
+                      <div className="key-code mono">{k.key}</div>
+                      <span className="key-date">Generated on {k.created}</span>
+                    </div>
+                    <button className="sno-btn-secondary" onClick={() => addToast('API Key copied to clipboard', 'info')}>
+                      Copy
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button className="sno-btn-primary" onClick={() => addToast('New API Token generated', 'success')}>
+                + Generate New Key
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 3: BROADCAST MESSAGE TO DISTRICTS
+          ===================================================================== */}
+      {broadcastModalOpen && (
+        <div className="sno-modal-overlay" onClick={() => setBroadcastModalOpen(false)}>
+          <div className="sno-modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="sno-modal-head">
+              <div>
+                <span className="sno-modal-tag">DIRECTIVE BROADCAST</span>
+                <h3 className="sno-modal-title">Broadcast Message to District Collectors &amp; Admins</h3>
+              </div>
+              <button className="sno-modal-close" onClick={() => setBroadcastModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleSendBroadcast}>
+              <div className="sno-modal-body">
+                <div className="form-group">
+                  <label>Target Audience</label>
+                  <select
+                    value={broadcastMsg.audience}
+                    onChange={e => setBroadcastMsg({ ...broadcastMsg, audience: e.target.value })}
+                  >
+                    <option value="All Districts">All 38 Revenue Districts</option>
+                    <option value="Coimbatore Region">Coimbatore Region (Coimbatore, Tiruppur, Erode, Nilgiris)</option>
+                    <option value="Chennai Metropolitan">Chennai Metropolitan Area</option>
+                    <option value="Districts Below Target">Districts Below 60% Target</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Directive Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Expedite Q4 Cadastral Vector Ingestion"
+                    value={broadcastMsg.title}
+                    onChange={e => setBroadcastMsg({ ...broadcastMsg, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Directive Body &amp; Instructions</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Enter policy guidance, deadlines, or escalation requirements..."
+                    value={broadcastMsg.body}
+                    onChange={e => setBroadcastMsg({ ...broadcastMsg, body: e.target.value })}
+                    className="sno-modal-textarea"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="sno-modal-footer">
+                <button type="button" className="sno-btn-secondary" onClick={() => setBroadcastModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="sno-btn-primary">
+                  <Send size={15} /> Dispatch Directive
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
@@ -543,203 +861,1105 @@ export default function StateNodalOfficerDashboard({ userName = 'State Nodal Off
 }
 
 /* =========================================================================
-   SMALL SHARED PIECES
+   EMBEDDED STYLES (Matching statenodalofficier.png)
    ========================================================================= */
 
-function PageHead({ title, sub, rightBtn }) {
-  return (
-    <div className="page-head">
-      <div><h2>{title}</h2><p>{sub}</p></div>
-      {rightBtn}
-    </div>
-  );
+const STATE_NODAL_STYLES = `
+.sno-root {
+  display: flex;
+  min-height: 100vh;
+  background: #f4fbf7;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0c281a;
+  overflow-x: hidden;
 }
 
-function KPI({ label, val, icon: Icon, tone = 'ink', progress }) {
-  return (
-    <div className="kpi">
-      <div className={`kpi-ic tone-${tone}`}><Icon size={16} /></div>
-      <div className="kpi-val">{val}</div>
-      <div className="kpi-label">{label}</div>
-      {progress != null && <div className="kpi-progress"><div style={{ width: `${progress}%` }} /></div>}
-    </div>
-  );
+.sno-root * {
+  box-sizing: border-box;
 }
 
-/* =========================================================================
-   CSS — same design tokens as the Operator dashboard, extended for
-   heatmaps, integration cards, toggles and threshold sliders
-   ========================================================================= */
-
-const CSS = `
-:root{
-  --ink:#1B2A41; --ink-soft:#3B4A63; --ink-faint:#7C879B;
-  --paper:#F6F5F0; --paper-raised:#FFFFFF; --line:#DCD9CE; --line-strong:#C7C3B5;
-  --rust:#C1502E; --rust-soft:#F4E3DC;
-  --green:#2F4A3D; --green-soft:#E4EAE3;
-  --navy-soft:#E2E7EF;
+/* Sidebar (Darker Mint Green #c5ebd7 -> #b2dfc8) */
+.sno-sidebar {
+  width: 236px;
+  background: #c5ebd7;
+  background: linear-gradient(180deg, #c5ebd7 0%, #b2dfc8 100%);
+  border-right: 1.5px solid #7bc69e;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px 14px 24px;
+  flex: none;
+  z-index: 20;
+  box-shadow: 4px 0 16px rgba(5, 150, 105, 0.08);
 }
-.op-dash{ display:flex; min-height:100vh; background:var(--paper); color:var(--ink);
-  font-family:'IBM Plex Sans', system-ui, sans-serif; font-size:14px; line-height:1.5; }
-.op-dash *{ box-sizing:border-box; }
-.op-dash h1,.op-dash h2,.op-dash h3,.op-dash h4{ font-family:'Source Serif 4', Georgia, serif; margin:0; color:var(--ink); }
-.op-dash .mono{ font-family:'IBM Plex Mono', monospace; }
-.op-dash button{ font-family:inherit; cursor:pointer; }
-.op-dash input,.op-dash select,.op-dash textarea{ font-family:inherit; }
 
-/* Sidebar */
-.sidebar{ width:240px; background:var(--ink); color:#C9D2DE; display:flex; flex-direction:column; flex:none; transition:width .18s ease; }
-.sidebar.collapsed{ width:72px; }
-.sb-top{ display:flex; align-items:center; justify-content:space-between; padding:18px 16px; border-bottom:1px solid rgba(255,255,255,0.1); }
-.brand{ display:flex; align-items:center; gap:10px; overflow:hidden; }
-.brand-mark{ width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; flex:none; }
-.brand-name{ font-family:'Source Serif 4', serif; font-size:16px; font-weight:600; color:#fff; white-space:nowrap; }
-.brand-name em{ font-style:normal; color:var(--rust); }
-.sb-toggle{ background:transparent; border:1px solid rgba(255,255,255,0.15); color:#C9D2DE; border-radius:4px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex:none; }
-.sb-toggle:hover{ background:rgba(255,255,255,0.08); }
-.sb-nav{ flex:1; overflow-y:auto; padding:14px 10px; }
-.sb-group{ margin-bottom:16px; }
-.sb-group-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#7C879B; padding:0 10px; margin-bottom:6px; }
-.sb-item{ display:flex; align-items:center; gap:11px; width:100%; padding:9px 10px; border:none; background:transparent; color:#C9D2DE; border-radius:4px; font-size:13.5px; font-weight:500; text-align:left; white-space:nowrap; overflow:hidden; }
-.sb-item span{ overflow:hidden; text-overflow:ellipsis; }
-.sb-item:hover{ background:rgba(255,255,255,0.06); color:#fff; }
-.sb-item.active{ background:rgba(193,80,46,0.18); color:#fff; box-shadow:inset 2px 0 0 var(--rust); }
-.sb-bottom{ padding:12px 10px 16px; border-top:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; gap:2px; }
+.sno-sidebar-top {
+  display: flex;
+  flex-direction: column;
+}
 
-/* Main / topbar */
-.main{ flex:1; display:flex; flex-direction:column; min-width:0; }
-.topbar{ height:60px; background:var(--paper-raised); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 26px; flex:none; }
-.tb-left{ display:flex; align-items:center; gap:12px; }
-.tb-title{ font-family:'Source Serif 4', serif; font-weight:600; font-size:16px; }
-.tb-chip{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; background:var(--rust-soft); color:var(--rust); padding:3px 9px; border-radius:2px; }
-.tb-right{ display:flex; align-items:center; gap:18px; }
-.tb-search{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line); border-radius:4px; padding:7px 12px; color:var(--ink-faint); }
-.tb-search input{ border:none; background:transparent; outline:none; font-size:13px; width:200px; color:var(--ink); }
-.tb-user{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-soft); font-weight:500; }
+.sno-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 24px;
+  cursor: pointer;
+  user-select: none;
+}
 
-.page{ padding:30px 32px 60px; overflow-y:auto; }
-.page-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; }
-.page-head h2{ font-size:24px; font-weight:600; }
-.page-head p{ margin:6px 0 0; color:var(--ink-soft); font-size:13.5px; }
+.sno-brand-logo-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1.5px solid #7bc69e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.15);
+}
 
-/* KPI */
-.kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-.kpi{ background:var(--paper-raised); border:1px solid var(--line); padding:18px; position:relative; }
-.kpi-ic{ width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
-.tone-ink{ background:var(--navy-soft); color:var(--ink); }
-.tone-rust{ background:var(--rust-soft); color:var(--rust); }
-.tone-green{ background:var(--green-soft); color:var(--green); }
-.kpi-val{ font-family:'Source Serif 4', serif; font-size:26px; font-weight:600; }
-.kpi-label{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
-.kpi-progress{ height:4px; background:var(--line); margin-top:12px; border-radius:2px; overflow:hidden; }
-.kpi-progress div{ height:100%; background:var(--rust); }
+.sno-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
-/* Panels */
-.grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; }
-.panel{ background:var(--paper-raised); border:1px solid var(--line); }
-.panel-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--line); }
-.panel-head h3{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:0.08em; color:var(--ink-faint); font-weight:500; }
-.panel-body{ padding:20px; }
-.muted{ color:var(--ink-faint); font-size:13px; }
+.sno-brand-text-col {
+  display: flex;
+  flex-direction: column;
+}
 
-.quick-actions{ display:flex; flex-direction:column; gap:10px; }
-.quick-actions-row{ flex-direction:row; flex-wrap:wrap; }
-.qa-btn{ display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); background:var(--paper); border-radius:2px; font-size:13.5px; font-weight:500; color:var(--ink); flex:1; min-width:220px; }
-.qa-btn:hover{ border-color:var(--rust); color:var(--rust); }
+.sno-brand-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0c281a;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
 
-/* Buttons / forms */
-.btn{ display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600; padding:10px 18px; border-radius:2px; border:1px solid var(--ink); background:transparent; }
-.btn-primary{ background:var(--ink); color:#fff; border-color:var(--ink); }
-.btn-primary:hover{ background:var(--ink-soft); }
-.btn-outline{ color:var(--ink); border-color:var(--line-strong); }
-.btn-outline:hover{ border-color:var(--ink); }
-.btn-ghost{ border-color:transparent; color:var(--rust); padding:6px 10px; }
-.btn-sm{ padding:8px 14px; font-size:12.5px; }
-.btn-block{ width:100%; justify-content:center; }
+.sno-brand-sub {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
 
-.field{ margin-bottom:14px; }
-.field label{ display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-faint); margin-bottom:6px; }
-.field input,.field select{ width:100%; padding:9px 11px; border:1px solid var(--line-strong); background:#fff; border-radius:2px; font-size:13.5px; color:var(--ink); }
+.sno-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-/* Table */
-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
-th{ text-align:left; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint); padding:8px 10px; border-bottom:1px solid var(--line); }
-td{ padding:11px 10px; border-bottom:1px solid var(--line); }
-.conf{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:12.5px; }
-.conf.high{ color:var(--green); } .conf.mid{ color:#8A6D1E; } .conf.low{ color:var(--rust); }
+.sno-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 
-.badge{ font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; padding:3px 9px; border-radius:2px; letter-spacing:0.03em; display:inline-flex; align-items:center; gap:6px; }
-.badge-ink{ background:var(--navy-soft); color:var(--ink); }
-.badge-rust{ background:var(--rust-soft); color:var(--rust); }
-.badge-green{ background:var(--green-soft); color:var(--green); }
-.status-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+.sno-nav-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #20563b;
+  letter-spacing: 0.06em;
+  padding: 0 12px 4px;
+}
 
-.trend{ display:inline-flex; align-items:center; gap:2px; font-family:'IBM Plex Mono', monospace; font-size:12.5px; font-weight:600; }
-.trend.up{ color:var(--green); }
-.trend.down{ color:var(--rust); }
+.sno-nav-item {
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1b452f;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  text-align: left;
+}
 
-/* Heatmap / progress bars */
-.heatbar-list{ display:flex; flex-direction:column; gap:12px; }
-.heatbar-row{ display:grid; grid-template-columns:120px 1fr 44px; gap:12px; align-items:center; }
-.hb-name{ font-size:13px; font-weight:500; }
-.hb-track{ height:8px; background:var(--paper); border:1px solid var(--line); border-radius:2px; overflow:hidden; }
-.hb-fill{ height:100%; }
-.hb-fill.tone-green{ background:var(--green); }
-.hb-fill.tone-ink{ background:var(--ink); }
-.hb-fill.tone-rust{ background:var(--rust); }
-.hb-val{ text-align:right; font-size:12.5px; color:var(--ink-soft); }
+.sno-nav-item:hover {
+  background: rgba(255, 255, 255, 0.75);
+  color: #047857;
+}
 
-/* Integrations */
-.integration-list{ display:flex; flex-direction:column; }
-.integration-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer; }
-.integration-row:last-child{ border-bottom:none; }
-.integration-row:hover{ opacity:0.8; }
-.integration-row.active-row{ background:var(--paper); margin:0 -20px; padding:12px 20px; }
-.integration-row b{ display:block; font-size:13.5px; }
-.int-sub{ display:block; font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+.sno-nav-item.active {
+  background: #094e32;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(9, 78, 50, 0.32);
+}
 
-/* Policies (toggles) */
-.policy-list{ display:flex; flex-direction:column; }
-.policy-row{ display:flex; justify-content:space-between; align-items:center; gap:16px; padding:15px 0; border-bottom:1px solid var(--line); }
-.policy-row:last-child{ border-bottom:none; }
-.policy-row b{ display:block; font-size:13.5px; font-weight:600; }
-.toggle{ width:40px; height:22px; border-radius:11px; background:var(--line-strong); border:none; position:relative; flex:none; transition:background .15s; }
-.toggle.on{ background:var(--green); }
-.toggle-knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .15s; box-shadow:0 1px 2px rgba(0,0,0,0.25); }
-.toggle.on .toggle-knob{ left:20px; }
+.sno-sidebar-bottom {
+  border-top: 1px solid #7bc69e;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-/* Thresholds */
-.threshold-list{ display:flex; flex-direction:column; gap:22px; }
-.threshold-row{ }
-.th-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
-.th-top b{ font-size:13.5px; }
-.th-val{ font-size:15px; font-weight:600; color:var(--rust); flex:none; }
-.th-slider{ width:100%; accent-color:var(--rust); }
+/* Main Layout */
+.sno-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+}
 
-/* Timeline */
-.timeline{ display:flex; flex-direction:column; gap:16px; }
-.tl-item{ display:flex; gap:12px; }
-.tl-dot{ width:8px; height:8px; border-radius:50%; background:var(--rust); margin-top:6px; flex:none; }
-.tl-item b{ display:block; font-size:13.5px; font-weight:500; }
-.tl-item span{ font-size:11.5px; color:var(--ink-faint); }
+.sno-header {
+  height: 64px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(163, 222, 192, 0.4);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1000;
+}
 
-/* Extract-row (reused for integration detail) */
-.extract-row{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
-.extract-row .k{ color:var(--ink-faint); }
-.extract-row .v{ font-family:'IBM Plex Mono', monospace; font-weight:500; }
+.sno-breadcrumb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
 
-/* Modal */
-.modal-overlay{ position:fixed; inset:0; background:rgba(27,42,65,0.5); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
-.modal{ background:#fff; width:100%; max-width:560px; max-height:88vh; overflow:auto; border-radius:2px; }
-.modal-head{ display:flex; justify-content:space-between; align-items:flex-start; padding:20px 24px; border-bottom:1px solid var(--line); }
-.modal-head h3{ font-size:17px; font-weight:600; }
-.modal-head p{ margin:4px 0 0; font-size:12.5px; color:var(--ink-faint); }
-.modal-close{ background:transparent; border:none; color:var(--ink-faint); }
-.modal-body{ padding:22px 24px; }
+.sno-bc-root {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4b5563;
+  font-weight: 600;
+}
 
-@media (max-width:1100px){
-  .kpi-grid{ grid-template-columns:repeat(2,1fr); }
-  .grid-2{ grid-template-columns:1fr; }
-  .heatbar-row{ grid-template-columns:90px 1fr 40px; }
+.sno-bc-sep {
+  color: #9ca3af;
+}
+
+.sno-state-selector {
+  position: relative;
+}
+
+.sno-state-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: #0c281a;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.sno-state-btn:hover {
+  background: #f0fdf4;
+}
+
+.sno-state-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 180px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  z-index: 50000;
+}
+
+.sno-state-item {
+  width: 100%;
+  padding: 8px 10px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sno-state-item:hover, .sno-state-item.active {
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.sno-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sno-search-pill {
+  width: 320px;
+  height: 38px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.sno-search-pill input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-family: inherit;
+  width: 100%;
+  color: #111827;
+}
+
+.sno-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  cursor: pointer;
+  position: relative;
+}
+
+.sno-bell-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 1.5px solid #ffffff;
+}
+
+.sno-user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.sno-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0c5838;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sno-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  z-index: 50000;
+}
+
+.sno-profile-dd { width: 220px; }
+.sno-notif-dd { width: 300px; }
+
+.sno-dd-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 10px;
+}
+
+.sno-pill-sm {
+  font-size: 11px;
+  font-weight: 700;
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sno-notif-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.notif-t { font-size: 12.5px; font-weight: 700; color: #111827; }
+.notif-s { font-size: 11.5px; color: #4b6354; margin: 2px 0; }
+.notif-tm { font-size: 10.5px; color: #9ca3af; }
+
+.sno-dd-user { display: flex; flex-direction: column; padding: 4px; }
+.sno-dd-user b { font-size: 13.5px; color: #111827; }
+.sno-dd-user span { font-size: 11px; color: #059669; font-weight: 600; margin-top: 2px; }
+.sno-dd-divider { height: 1px; background: #f3f4f6; margin: 8px 0; }
+
+.sno-dd-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sno-dd-item:hover { background: #f0fdf4; color: #059669; }
+.sno-dd-item.danger:hover { background: #fef2f2; color: #dc2626; }
+
+/* Stage Content */
+.sno-content-stage {
+  padding: 28px 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sno-hero-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.sno-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0c281a;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.sno-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b6354;
+  margin: 4px 0 0;
+}
+
+.sno-date-card {
+  background: #ffffff;
+  border: 1px solid rgba(163, 222, 192, 0.6);
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.sno-date-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sno-day {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.sno-date-num {
+  font-size: 13.5px;
+  color: #0c281a;
+  font-weight: 800;
+}
+
+/* 4 KPI Cards Grid */
+.sno-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.sno-kpi-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(163, 222, 192, 0.45);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sno-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #059669;
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.08);
+}
+
+.kpi-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kpi-donut-metric {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.donut-circle-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex: none;
+}
+
+.donut-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.donut-ring-bg {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 3.8;
+}
+
+.donut-ring-val {
+  fill: none;
+  stroke: #0c5838;
+  stroke-width: 3.8;
+  stroke-linecap: round;
+}
+
+.donut-center-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0c281a;
+}
+
+.donut-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4b6354;
+}
+
+.kpi-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.bg-mint { background: #dcfce7; }
+.bg-sky { background: #e0f2fe; }
+.bg-amber { background: #fef3c7; }
+
+.text-emerald { color: #059669; }
+.text-sky { color: #0284c7; }
+.text-amber { color: #d97706; }
+
+.kpi-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0c281a;
+  line-height: 1.1;
+}
+
+.kpi-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 3px;
+}
+
+/* Middle Row */
+.sno-middle-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 18px;
+}
+
+.sno-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(163, 222, 192, 0.45);
+  padding: 20px 22px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+}
+
+.sno-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sno-card-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0c281a;
+  margin: 0;
+}
+
+.sno-card-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+.sno-link-btn {
+  background: transparent;
+  border: none;
+  color: #059669;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sno-link-btn:hover {
+  text-decoration: underline;
+}
+
+/* District Progress Bars */
+.sno-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sno-dist-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13.5px;
+}
+
+.dist-name {
+  width: 110px;
+  font-weight: 700;
+  color: #1f2937;
+  flex: none;
+}
+
+.dist-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.dist-bar-fill {
+  height: 100%;
+  background: #0c5838;
+  border-radius: 99px;
+}
+
+.dist-pct {
+  width: 36px;
+  text-align: right;
+  font-weight: 800;
+  color: #0c281a;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+}
+
+/* Integration Health Rows */
+.sno-integrations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sno-integ-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.integ-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.integ-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e6f4ea;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.integ-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.integ-name {
+  font-size: 13px;
+  color: #111827;
+}
+
+.integ-sub {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.integ-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.integ-pill.green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.integ-pill.amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.integ-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Bottom CTA Actions */
+.sno-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.sno-cta-btn {
+  background: #094e32;
+  color: #ffffff;
+  border: none;
+  padding: 18px 20px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 14px rgba(9, 78, 50, 0.2);
+}
+
+.sno-cta-btn:hover {
+  background: #073d27;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(9, 78, 50, 0.3);
+}
+
+.cta-arrow {
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+/* Table Wrap */
+.sno-table-wrap {
+  overflow-x: auto;
+}
+
+.sno-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.sno-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f8faf9;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #4b6354;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sno-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+.rank-num {
+  color: #059669;
+}
+
+.table-bar-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tbl-track {
+  width: 90px;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.tbl-fill {
+  height: 100%;
+  background: #0c5838;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+.badge-leading { background: #dcfce7; color: #166534; }
+.badge-on-track { background: #e0f2fe; color: #0284c7; }
+.badge-moderate { background: #fef3c7; color: #b45309; }
+.badge-needs-review, .badge-lagging { background: #fee2e2; color: #dc2626; }
+
+/* Integrations Detail */
+.sno-integrations-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.sno-integ-detail-card {
+  background: #f8faf9;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.int-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.int-name { font-size: 15px; color: #111827; }
+.int-ep { font-size: 11px; color: #6b7280; display: block; margin-bottom: 12px; }
+
+.int-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.int-stats-grid .lbl { font-size: 11px; color: #6b7280; display: block; }
+
+/* Policies & Thresholds */
+.sno-policies-list, .sno-thresholds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.sno-policy-row, .sno-thresh-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.policy-cat { font-size: 10.5px; font-weight: 800; color: #059669; text-transform: uppercase; }
+.policy-title, .thresh-name { font-size: 14px; color: #111827; }
+.policy-desc, .thresh-desc { font-size: 12px; color: #6b7280; margin: 3px 0 0; }
+
+.sno-toggle-btn {
+  width: 44px;
+  height: 24px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sno-toggle-btn.active {
+  background: #0c5838;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.sno-toggle-btn.active .toggle-slider {
+  left: 23px;
+}
+
+.thresh-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sno-range-slider {
+  accent-color: #0c5838;
+  cursor: pointer;
+}
+
+.thresh-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0c281a;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* Forms & Buttons */
+.sno-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 500px;
+  margin-top: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.form-group input, .form-group select {
+  padding: 9px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13.5px;
+  outline: none;
+}
+
+.sno-btn-primary {
+  background: #094e32;
+  color: #ffffff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.sno-btn-secondary {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Modals */
+.sno-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 24, 13, 0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 20px;
+}
+
+.sno-modal-dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.sno-modal-dialog.large {
+  max-width: 800px;
+}
+
+.sno-modal-head {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f8faf9;
+  border-bottom: 1px solid #f3f4f6;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.sno-modal-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.06em;
+}
+
+.sno-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0c281a;
+  margin: 3px 0 0;
+}
+
+.sno-modal-close {
+  background: #f3f4f6;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sno-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sno-modal-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.sno-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f3f4f6;
+  background: #f8faf9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+
+.sno-keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sno-key-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.key-name { font-size: 13px; color: #111827; }
+.key-code { font-size: 12px; color: #059669; margin: 3px 0; }
+.key-date { font-size: 11px; color: #6b7280; }
+
+@media (max-width: 1100px) {
+  .sno-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .sno-middle-grid { grid-template-columns: 1fr; }
+  .sno-actions-grid { grid-template-columns: 1fr; }
+  .sno-integrations-detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .sno-root { flex-direction: column; }
+  .sno-sidebar { width: 100%; }
 }
 `;

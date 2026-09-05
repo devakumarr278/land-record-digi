@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, UploadCloud, RefreshCw, PencilLine, Send,
   AlertTriangle, History, Settings as SettingsIcon, LogOut, ChevronsLeft, ChevronsRight,
@@ -7,9 +7,10 @@ import {
   RotateCw, Download, PlayCircle, ShieldCheck, GitCompare, Crosshair, ArrowRight,
   ShieldAlert, ThumbsUp, PencilRuler, Ban, ArrowUpCircle, Compass, Users, BrainCircuit,
   MapPinned, MessageSquareWarning, CropIcon, Globe, Columns, Layers, Box, Network,
-  Plus, Trash2
+  Plus, Trash2, Bell, Calendar, Landmark, AlertCircle
 } from 'lucide-react';
 import api, { authApi, documentApi, gisApi, discrepancyApi, auditApi } from '../../services/api';
+import logoImg from '../../assets/logo.jpg';
 
 function mapBackendDocToUi(d) {
   const meta = d.metadata || {};
@@ -177,7 +178,7 @@ const INITIAL_DOCS = [
       { key: 'village', label: 'Village', value: 'Kinathukadavu', confidence: 97 },
       { key: 'taluk', label: 'Taluk', value: 'Pollachi', confidence: 99 },
       { key: 'area', label: 'Composite Parcel Area', value: '14.5 Acres', confidence: 96 },
-      { key: 'measurements', label: 'FMB Field Ladder', value: '140m × 110m (Chains: 70 × 55)', confidence: 95 },
+      { key: 'measurements', label: 'FMB Field Ladder', value: '140m ├ù 110m (Chains: 70 ├ù 55)', confidence: 95 },
       { key: 'boundaryStones', label: 'Boundary Stone Marks', value: '4 Tri-Junction Stones', confidence: 97 },
     ],
     discrepancies: [],
@@ -287,9 +288,9 @@ const INITIAL_DOCS = [
     ],
   },
   {
-    id: 'LR-153', type: 'PDF', name: '153-1921.pdf', fileName: '153-1921.pdf', docType: 'Dharma Sasanam Trust Settlement', village: 'Srirangam', taluk: 'Trichinopoly', district: 'Trichinopoly (திருச்சிராப்பள்ளி)', status: 'validated', confidence: 98, owner: 'Muthu Karuppa Kone (முத்துக்கருப்பக்கோனார்)', survey: '175/1', area: '11.72 Acres (Schedule B)', patta: 'Doc 153/1921 (Vol 539, P.475-478)', classification: 'Dharma Sasanam / Trust Settlement (நஞ்சை & புஞ்சை)',
+    id: 'LR-153', type: 'PDF', name: '153-1921.pdf', fileName: '153-1921.pdf', docType: 'Dharma Sasanam Trust Settlement', village: 'Srirangam', taluk: 'Trichinopoly', district: 'Trichinopoly (திருச்சிராப்பள்ளி)', status: 'validated', confidence: 98, owner: 'Muthu Karuppa Kone (முத்துக்கருப்பக் கோனார்)', survey: '175/1', area: '11.72 Acres (Schedule B)', patta: 'Doc 153/1921 (Vol 539, P.475-478)', classification: 'Dharma Sasanam / Trust Settlement (நஞ்சை & புஞ்சை)',
     fields: [
-      { key: 'owner', label: 'Executant / Donor', value: 'Muthu Karuppa Kone (முத்துக்கருப்பக்கோனார்)', confidence: 98 },
+      { key: 'owner', label: 'Executant / Donor', value: 'Muthu Karuppa Kone (முத்துக்கருப்பக் கோனார்)', confidence: 98 },
       { key: 'fatherName', label: "Father's Name", value: 'Konga Govinda Kone (கொங்க கோவிந்தக் கோனார்)', confidence: 98 },
       { key: 'survey', label: 'Survey Number', value: '175/1', confidence: 99 },
       { key: 'subdivision', label: 'Sub-Division Number', value: '1', confidence: 98 },
@@ -310,6 +311,195 @@ const INITIAL_DOCS = [
     ],
   },
 ];
+
+
+/* =========================================================================
+   TAMIL NADU SURVEY PARCEL GIS COORDINATES LOOKUP
+   ========================================================================= */
+const TAMIL_NADU_SURVEY_PARCELS = {
+  '125/2': {
+    lat: 10.8240,
+    long: 77.0130,
+    village: 'Kinathukadavu',
+    taluk: 'Pollachi',
+    district: 'Coimbatore',
+    area: '1.80 Acres',
+    owner: 'MURUGAN KUMAR',
+    polygon: [
+      [10.8248, 77.0120],
+      [10.8252, 77.0142],
+      [10.8236, 77.0145],
+      [10.8230, 77.0125]
+    ]
+  },
+  '118/3': {
+    lat: 10.5828,
+    long: 76.9295,
+    village: 'Anaimalai',
+    taluk: 'Pollachi',
+    district: 'Coimbatore',
+    area: '8.20 Acres',
+    owner: 'TN Revenue Dept',
+    polygon: [
+      [10.5845, 76.9278],
+      [10.5850, 76.9315],
+      [10.5815, 76.9320],
+      [10.5810, 76.9282]
+    ]
+  },
+  '176/3': {
+    lat: 10.8210,
+    long: 77.0115,
+    village: 'Keelathoor',
+    taluk: 'Srirangam',
+    district: 'Tiruchirappalli',
+    area: '2.65 Acres',
+    owner: 'Muthukrishna Iyer',
+    polygon: [
+      [10.8220, 77.0102],
+      [10.8228, 77.0130],
+      [10.8198, 77.0135],
+      [10.8192, 77.0108]
+    ]
+  },
+  '175/1': {
+    lat: 10.8635,
+    long: 78.6960,
+    village: 'Srirangam',
+    taluk: 'Trichinopoly',
+    district: 'Tiruchirappalli',
+    area: '11.72 Acres',
+    owner: 'Muthu Karuppa Kone',
+    polygon: [
+      [10.8650, 78.6945],
+      [10.8658, 78.6980],
+      [10.8620, 78.6985],
+      [10.8615, 78.6950]
+    ]
+  },
+  '153/1': {
+    lat: 10.8625,
+    long: 78.6948,
+    village: 'Srirangam',
+    taluk: 'Trichinopoly',
+    district: 'Tiruchirappalli',
+    area: '11.72 Acres',
+    owner: 'Muthu Karuppa Kone',
+    polygon: [
+      [10.8640, 78.6930],
+      [10.8648, 78.6965],
+      [10.8610, 78.6970],
+      [10.8605, 78.6935]
+    ]
+  },
+  '145/2': {
+    lat: 11.1415,
+    long: 77.0425,
+    village: 'Kovilpalayam',
+    taluk: 'Sarkar Samakulam',
+    district: 'Coimbatore',
+    area: '2.12 Acres',
+    owner: 'Ramasamy Gounder',
+    polygon: [
+      [11.1425, 77.0415],
+      [11.1430, 77.0438],
+      [11.1405, 77.0440],
+      [11.1400, 77.0418]
+    ]
+  },
+  '54/2': {
+    lat: 11.0261,
+    long: 77.1264,
+    village: 'Sulur',
+    taluk: 'Sulur',
+    district: 'Coimbatore',
+    area: '3.10 Acres',
+    owner: 'Deepa N',
+    polygon: [
+      [11.0272, 77.1250],
+      [11.0278, 77.1278],
+      [11.0250, 77.1280],
+      [11.0245, 77.1255]
+    ]
+  },
+  '77/1': {
+    lat: 10.9020,
+    long: 76.9530,
+    village: 'Madukkarai',
+    taluk: 'Madukkarai',
+    district: 'Coimbatore',
+    area: '0.80 Acres',
+    owner: 'Karthik S',
+    polygon: [
+      [10.9028, 76.9520],
+      [10.9032, 76.9542],
+      [10.9012, 76.9545],
+      [10.9008, 76.9523]
+    ]
+  },
+  '88/2': {
+    lat: 10.8255,
+    long: 77.0150,
+    village: 'Kinathukadavu',
+    taluk: 'Pollachi',
+    district: 'Coimbatore',
+    area: '0.85 Acres',
+    owner: 'Senthil Nathan',
+    polygon: [
+      [10.8262, 77.0142],
+      [10.8268, 77.0160],
+      [10.8248, 77.0163],
+      [10.8242, 77.0145]
+    ]
+  },
+  '245/1A': {
+    lat: 10.8210,
+    long: 77.0115,
+    village: 'Keelathoor',
+    taluk: 'Kinathukadavu',
+    district: 'Coimbatore',
+    area: '3.40 Acres',
+    owner: 'Ramasami Thevar',
+    polygon: [
+      [10.8220, 77.0102],
+      [10.8228, 77.0130],
+      [10.8198, 77.0135],
+      [10.8192, 77.0108]
+    ]
+  }
+};
+
+function getSurveyParcelInfo(surveyNo, villageName) {
+  const cleanSurvey = (surveyNo || '').trim();
+  if (TAMIL_NADU_SURVEY_PARCELS[cleanSurvey]) {
+    return TAMIL_NADU_SURVEY_PARCELS[cleanSurvey];
+  }
+  // Deterministic fallback centered in Tamil Nadu
+  let hash = 0;
+  for (let i = 0; i < cleanSurvey.length; i++) {
+    hash = (hash << 5) - hash + cleanSurvey.charCodeAt(i);
+  }
+  const latOffset = ((Math.abs(hash) % 1000) / 1000) * 0.02 - 0.01;
+  const lngOffset = ((Math.abs(hash >> 3) % 1000) / 1000) * 0.02 - 0.01;
+  const baseLat = 10.8240 + latOffset;
+  const baseLng = 77.0130 + lngOffset;
+
+  return {
+    lat: baseLat,
+    long: baseLng,
+    village: villageName || 'Kinathukadavu',
+    taluk: 'Pollachi',
+    district: 'Coimbatore',
+    area: '2.50 Acres',
+    owner: 'Landholder',
+    polygon: [
+      [baseLat + 0.0008, baseLng - 0.0010],
+      [baseLat + 0.0012, baseLng + 0.0012],
+      [baseLat - 0.0006, baseLng + 0.0014],
+      [baseLat - 0.0010, baseLng - 0.0008]
+    ]
+  };
+}
 
 const INITIAL_GEO_GCPS = {
   'LR-1025': [
@@ -486,15 +676,15 @@ const MOCK_FIELD_VALUES = {
   boundaries: 'N: Sy.125/1 · S: Village Road · E: Sy.126 · W: Sy.124', consideration: '₹4,50,000',
   prevOwner: 'MURUGAN', newOwner: 'RAVI KUMAR', mutationNo: 'MUT-2010-0456', reason: 'Sale',
   cultivation: 'Paddy', northBoundary: 'Survey 125/1', southBoundary: 'Village Road',
-  eastBoundary: 'Survey 126', westBoundary: 'Survey 124', measurements: '120 ft × 90 ft',
+  eastBoundary: 'Survey 126', westBoundary: 'Survey 124', measurements: '120 ft ├ù 90 ft',
   geometry: 'POLYGON (4 pts)',
 };
 
 /* Reference (LRMS) records the validation stage cross-checks against,
    keyed by survey number. */
 const REFERENCE_DB = {
-  '175/1': { owner: 'Muthu Karuppa Kone (முத்துக்கருப்பக்கோனார்)', area: '11.72 Acres (Schedule B)', village: 'Srirangam', classification: 'Trust Settlement / Dharma Sasanam (நஞ்சை & புஞ்சை)', source: 'LRMS-1921-TRICHY' },
-  '153/1': { owner: 'Muthu Karuppa Kone (முத்துக்கருப்பக்கோனார்)', area: '11.72 Acres (Schedule B)', village: 'Srirangam', classification: 'Trust Settlement / Dharma Sasanam (நஞ்சை & புஞ்சை)', source: 'LRMS-1921-TRICHY' },
+  '175/1': { owner: 'Muthu Karuppa Kone (முத்துக்கருப்பக் கோனார்)', area: '11.72 Acres (Schedule B)', village: 'Srirangam', classification: 'Trust Settlement / Dharma Sasanam (நஞ்சை & புஞ்சை)', source: 'LRMS-1921-TRICHY' },
+  '153/1': { owner: 'Muthu Karuppa Kone (முத்துக்கருப்பக் கோனார்)', area: '11.72 Acres (Schedule B)', village: 'Srirangam', classification: 'Trust Settlement / Dharma Sasanam (நஞ்சை & புஞ்சை)', source: 'LRMS-1921-TRICHY' },
   '125/2': { owner: 'MURUGAN KUMAR', area: '1.8 Acres', village: 'Kinathukadavu', classification: 'Agricultural (Dry)', source: 'LRMS-1022' },
   '145/2': { owner: 'Ramasamy Gounder', area: '2.12 Acres', village: 'Kovilpalayam', classification: 'Wet Land (Nanjai)', source: 'LRMS-1042' },
   '118/3': { owner: 'TN Revenue Dept', area: '8.20 Acres', village: 'Anaimalai', classification: 'Dry Land (Punjai)', source: 'LRMS-1014' },
@@ -761,7 +951,7 @@ function extractFieldsFromOcrText(rawText) {
   const lowerT = cleanText.toLowerCase();
 
   // 1. Survey Number
-  const surveyMatch = cleanText.match(/\b(?:புல\s*எண்|சர்வே\s*(?:நெ|எண்|நம்பர்)?|survey\s*(?:no|number)?|s\.no|s\.f|க\.எண்)[:\s.]*([0-9]{1,4}(?:\s*[/\\-]\s*[0-9]{1,3}[A-Za-z]*)?)\b/i);
+  const surveyMatch = cleanText.match(/\b(?:புல\s*எண்|சர்வே\s*(?:எண்|நெ)?|survey\s*(?:no|number)?|s\.no|s\.f|க\.எண்)[:\s.]*([0-9]{1,4}(?:\s*[/\\-]\s*[0-9]{1,3}[A-Za-z]*)?)\b/i);
   let survey = null;
   if (surveyMatch) {
     survey = surveyMatch[1].replace(/\s+/g, '').replace('-', '/').replace('\\', '/');
@@ -843,7 +1033,7 @@ function extractFieldsFromOcrText(rawText) {
   let classification = null;
   if (lowerT.includes('nanja') && lowerT.includes('punja')) {
     classification = 'Wet (Nanja) & Dry (Punja)';
-  } else if (lowerT.includes('trust') || lowerT.includes('dharma') || cleanText.includes('சாஸனம்')) {
+  } else if (lowerT.includes('trust') || lowerT.includes('dharma') || cleanText.includes('சாசனம்')) {
     classification = 'Trust Settlement / Dharma Sasanam (நஞ்சை & புஞ்சை)';
   } else if (lowerT.includes('nanja') || lowerT.includes('wet') || cleanText.includes('நஞ்சை')) {
     classification = 'Wet Land (Nanjai)';
@@ -960,21 +1150,42 @@ function regionFor(key) {
   return { x, y, w, h: hgt, page: 1, label: key };
 }
 
+function formatFieldValue(val) {
+  if (val == null || val === '' || val === '—' || val === '-') return '—';
+  if (typeof val === 'object') {
+    if (val.north || val.south || val.east || val.west) {
+      const parts = [];
+      if (val.north) parts.push(`N: ${val.north}`);
+      if (val.south) parts.push(`S: ${val.south}`);
+      if (val.east) parts.push(`E: ${val.east}`);
+      if (val.west) parts.push(`W: ${val.west}`);
+      return parts.length > 0 ? parts.join(' · ') : '—';
+    }
+    const entries = Object.entries(val).filter(([_, v]) => v != null && v !== '');
+    if (entries.length > 0) {
+      return entries.map(([k, v]) => `${k}: ${v}`).join(' · ');
+    }
+    return '—';
+  }
+  return String(val);
+}
+
 function genFields(docType, lowKeys, doc) {
   const schema = DOC_TYPE_FIELDS[docType] || DOC_TYPE_FIELDS['Ownership Record'];
   const low = new Set(lowKeys || []);
   const ext = doc?.extractedData || {};
 
   return schema.map(f => {
-    const value = doc?.[f.key] ?? ext[f.key] ?? null;
-    const hasValue = value != null && value !== '' && value !== '—';
+    let rawVal = doc?.[f.key] ?? ext[f.key] ?? null;
+    const formattedVal = formatFieldValue(rawVal);
+    const hasValue = formattedVal !== '—';
     const confidence = hasValue ? (low.has(f.key) ? 45 + Math.floor(Math.random() * 15) : 88 + Math.floor(Math.random() * 10)) : 0;
     return {
       key: f.key,
       label: f.label,
-      value: hasValue ? String(value) : '—',
+      value: formattedVal,
       confidence,
-      unresolved: !hasValue,          // UI renders this distinctly, not as 97% confident
+      unresolved: !hasValue,
       region: regionFor(f.key),
     };
   });
@@ -1077,7 +1288,7 @@ function DocPreview({ url, type, filterCss, altLabel, zoom, evidenceRegion, evid
       <div className="doc-sim-preview">
         <div className="sim-pdf-page" style={{ filter: filterCss || 'none' }}>
           <div className="sim-pdf-header">
-            <span className="sim-pdf-seal">🏛️</span>
+            <span className="sim-pdf-seal" style={{ fontSize: 20 }}>🏛️</span>
             <b>GOVERNMENT OF TAMIL NADU — REVENUE DEPARTMENT</b>
             <span>LAND RECORD EXTRACT &amp; SETTLEMENT REGISTER</span>
           </div>
@@ -1576,7 +1787,7 @@ function OcrTypewriter({ text, running, onProgress, onComplete, stuckToken, onSt
   return (
     <pre className="ocr-fulltext mono">
       {shown}
-      {running && <span className="type-cursor">▍</span>}
+      {running && <span className="type-cursor">Γûì</span>}
     </pre>
   );
 }
@@ -1672,6 +1883,8 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
   const [docs, setDocs] = useState(INITIAL_DOCS);
   const [submitted, setSubmitted] = useState(INITIAL_SUBMITTED);
   const [activity, setActivity] = useState(INITIAL_ACTIVITY);
+  const [dashFilter, setDashFilter] = useState('all');
+  const [dashSearch, setDashSearch] = useState('');
 
   /* ---- Dynamic Data Sync with MongoDB Backend ---- */
   useEffect(() => {
@@ -1832,7 +2045,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
 
     setDocs(ds => [newDoc, ...ds]);
     pushActivity(`Uploaded ${newDoc.id} (${selectedFile.name}) — Survey ${parsed.survey}`);
-    addToast(`Document ${newDoc.id} uploaded. Initializing AI enhancement & OCR…`, 'info');
+    addToast(`Document ${newDoc.id} uploaded. Initializing AI enhancement & OCR...`, 'info');
 
     // Forward to MongoDB backend & Python AI service
     const formData = new FormData();
@@ -2113,7 +2326,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
   function startValidation(id) {
     setPipeline(p => (p && (p.docId === id || p._origId === id)) ? { ...p, stage: 'validating' } : p);
     setDocs(ds => ds.map(d => (d.id === id || d._origId === id) ? { ...d, status: 'validating' } : d));
-    pushActivity(`Cross-checking ${id} against reference records…`);
+    pushActivity(`Cross-checking ${id} against reference records...`);
     /* normalization is done — collapse that accordion too */
     setSectionOpen(s => ({ ...s, extract: false, normalize: false }));
 
@@ -2242,41 +2455,412 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
      --------------------------------------------------------------------- */
 
   function renderDashboard() {
+    const filterDocs = (docs || []).filter(d => {
+      if (dashFilter === 'review') return d.status === 'review';
+      if (dashFilter === 'processing') return ['preprocessing', 'preprocess-ready', 'ocr', 'ocr-paused', 'ocr-ready', 'extraction', 'normalizing', 'validating'].includes(d.status);
+      if (dashFilter === 'validated') return d.status === 'validated' || d.status === 'submitted';
+      return true;
+    }).filter(d => {
+      if (!dashSearch) return true;
+      const q = dashSearch.toLowerCase();
+      return (d.id && d.id.toLowerCase().includes(q)) ||
+             (d.survey && d.survey.toLowerCase().includes(q)) ||
+             (d.village && d.village.toLowerCase().includes(q)) ||
+             (d.name && d.name.toLowerCase().includes(q));
+    });
+
     return (
-      <>
-        <PageHead title={`Good Morning, ${userName} 👋`} sub="Here's today's digitization activity." />
-        <div className="kpi-grid">
-          <KPI label="Uploaded Today" val={counts.uploaded} icon={UploadCloud} />
-          <KPI label="In AI Pipeline" val={counts.inProgress} icon={RefreshCw} />
-          <KPI label="Needs Review" val={counts.review} icon={PencilLine} tone="rust" />
-          <KPI label="Submitted" val={counts.submitted} icon={Send} tone="green" />
-          <KPI label="Completion" val={pct + '%'} icon={FileCheck2} progress={pct} />
+      <div className="op-dashboard-container">
+        {/* Top Hero Banner */}
+        {/* Top Welcome Row & Date Widget (Matching Screenshot) */}
+        <div className="op-welcome-row">
+          <div className="op-welcome-text">
+            <h1 className="op-welcome-title">
+              Welcome Back,<br />
+              <span className="op-welcome-name">Field &amp; Verification Officer</span>
+            </h1>
+            <p className="op-welcome-sub">Verify today. Trusted land records for tomorrow.</p>
+          </div>
+          <div className="op-date-card">
+            <div className="op-date-icon-box">
+              <Calendar size={22} className="op-date-icon" />
+            </div>
+            <div className="op-date-details">
+              <span className="op-date-main">Wed, 03 Sep 2026</span>
+              <span className="op-date-day">Wednesday</span>
+            </div>
+          </div>
         </div>
-        <div className="grid-2">
-          <div className="panel">
-            <div className="panel-head"><h3>PROCESSING PIPELINE</h3></div>
-            <div className="panel-body">
-              <div className="stage-row">
-                <Stage n={counts.uploaded} label="Uploaded" />
-                <StageArrow />
-                <Stage n={counts.inProgress} label="AI Processing" />
-                <StageArrow />
-                <Stage n={counts.review} label="Needs Review" />
-                <StageArrow />
-                <Stage n={counts.submitted} label="Submitted" />
+
+        {/* 4 Clean White KPI Cards (Matching Screenshot) */}
+        <div className="op-kpi-grid">
+          {/* Card 1: Uploaded */}
+          <div className="op-kpi-card" onClick={() => setActiveTab('upload')}>
+            <div className="op-kpi-icon-square green">
+              <FileText size={22} />
+            </div>
+            <div className="op-kpi-content">
+              <div className="op-kpi-number">{counts.uploaded || 11}</div>
+              <div className="op-kpi-label">Uploaded</div>
+            </div>
+            <div className="op-kpi-badge-wrap">
+              <span className="op-kpi-badge green">↑ 22%</span>
+            </div>
+          </div>
+
+          {/* Card 2: In Processing */}
+          <div className="op-kpi-card" onClick={() => setActiveTab('processing')}>
+            <div className="op-kpi-icon-square blue">
+              <SettingsIcon size={22} />
+            </div>
+            <div className="op-kpi-content">
+              <div className="op-kpi-number">{counts.inProgress || 1}</div>
+              <div className="op-kpi-label">In Processing</div>
+            </div>
+            <div className="op-kpi-badge-wrap">
+              <span className="op-kpi-badge blue">→ 0%</span>
+            </div>
+          </div>
+
+          {/* Card 3: Needs Review */}
+          <div className="op-kpi-card" onClick={() => setActiveTab('review')}>
+            <div className="op-kpi-icon-square orange">
+              <AlertCircle size={22} />
+            </div>
+            <div className="op-kpi-content">
+              <div className="op-kpi-number">{counts.review || 1}</div>
+              <div className="op-kpi-label">Needs Review</div>
+            </div>
+            <div className="op-kpi-badge-wrap">
+              <span className="op-kpi-badge orange">↑ 12%</span>
+            </div>
+          </div>
+
+          {/* Card 4: Submitted */}
+          <div className="op-kpi-card" onClick={() => setActiveTab('submitted')}>
+            <div className="op-kpi-icon-square purple">
+              <Send size={22} />
+            </div>
+            <div className="op-kpi-content">
+              <div className="op-kpi-number">{counts.submitted || 2}</div>
+              <div className="op-kpi-label">Submitted</div>
+            </div>
+            <div className="op-kpi-badge-wrap">
+              <span className="op-kpi-badge green">↑ 33%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Middle Row: Verification Progress (Left) + Quick Actions (Right) */}
+        <div className="op-middle-grid">
+          {/* Daily Progress Gauge Card */}
+          <div className="op-panel op-progress-card">
+            <div className="op-panel-header">
+              <div>
+                <h3 className="op-panel-title">Verification Progress</h3>
+                <p className="op-panel-subtitle">Today's digitization & validation target</p>
+              </div>
+              <span className="op-chip green">On Schedule</span>
+            </div>
+            <div className="op-progress-body">
+              <div className="op-gauge-wrap">
+                <svg className="op-gauge-svg" viewBox="0 0 160 160">
+                  <circle cx="80" cy="80" r="64" className="op-gauge-bg" />
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="64"
+                    className="op-gauge-fill"
+                    strokeDasharray="402"
+                    strokeDashoffset={402 - (402 * 0.65)}
+                  />
+                </svg>
+                <div className="op-gauge-center">
+                  <span className="op-gauge-pct">65%</span>
+                  <span className="op-gauge-sub">Verified Today</span>
+                </div>
+              </div>
+
+              <div className="op-progress-breakdown">
+                <div className="op-prog-item">
+                  <div className="op-prog-label-row">
+                    <span className="op-prog-dot green"></span>
+                    <span className="op-prog-name">Verified & Dispatched</span>
+                    <span className="op-prog-count">182 / 280 (65%)</span>
+                  </div>
+                  <div className="op-bar-track">
+                    <div className="op-bar-fill green" style={{ width: '65%' }}></div>
+                  </div>
+                </div>
+
+                <div className="op-prog-item">
+                  <div className="op-prog-label-row">
+                    <span className="op-prog-dot blue"></span>
+                    <span className="op-prog-name">Under AI OCR Pipeline</span>
+                    <span className="op-prog-count">42 / 280 (15%)</span>
+                  </div>
+                  <div className="op-bar-track">
+                    <div className="op-bar-fill blue" style={{ width: '15%' }}></div>
+                  </div>
+                </div>
+
+                <div className="op-prog-item">
+                  <div className="op-prog-label-row">
+                    <span className="op-prog-dot amber"></span>
+                    <span className="op-prog-name">Pending Manual Review</span>
+                    <span className="op-prog-count">56 / 280 (20%)</span>
+                  </div>
+                  <div className="op-bar-track">
+                    <div className="op-bar-fill amber" style={{ width: '20%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="op-progress-footer">
+              <div className="op-foot-stat">
+                <span className="op-foot-label">Avg Review Time</span>
+                <span className="op-foot-val">2.8 min / doc</span>
+              </div>
+              <div className="op-foot-divider"></div>
+              <div className="op-foot-stat">
+                <span className="op-foot-label">Cadastral Match Rate</span>
+                <span className="op-foot-val">99.2%</span>
+              </div>
+              <div className="op-foot-divider"></div>
+              <div className="op-foot-stat">
+                <span className="op-foot-label">AI Engine</span>
+                <span className="op-foot-val">Bhoomi v2.4 (GPU)</span>
               </div>
             </div>
           </div>
-          <div className="panel">
-            <div className="panel-head"><h3>QUICK ACTIONS</h3></div>
-            <div className="panel-body quick-actions">
-              <button className="qa-btn" onClick={() => setActiveTab('upload')}><UploadCloud size={17} /> Upload New Record</button>
-              <button className="qa-btn" onClick={() => setActiveTab('review')}><PencilLine size={17} /> Review Extraction</button>
-              <button className="qa-btn" onClick={() => setActiveTab('viewdoc')}><Eye size={17} /> View a Document</button>
+
+          {/* Quick Actions (2x2 Grid) */}
+          <div className="op-panel op-actions-card">
+            <div className="op-panel-header">
+              <div>
+                <h3 className="op-panel-title">Quick Actions</h3>
+                <p className="op-panel-subtitle">Instant workspace shortcuts</p>
+              </div>
+            </div>
+            <div className="op-actions-grid">
+              <div className="op-action-box" onClick={() => setActiveTab('upload')}>
+                <div className="op-action-icon emerald">
+                  <UploadCloud size={20} />
+                </div>
+                <div className="op-action-content">
+                  <h4>Upload Land Record</h4>
+                  <p>Drag & drop Tamil/English patta or deed scan</p>
+                </div>
+                <ChevronRight size={16} className="op-action-arrow" />
+              </div>
+
+              <div className="op-action-box" onClick={() => setActiveTab('processing')}>
+                <div className="op-action-icon blue">
+                  <ScanLine size={20} />
+                </div>
+                <div className="op-action-content">
+                  <h4>AI OCR Workspace</h4>
+                  <p>Inspect bounding boxes & confidence scores</p>
+                </div>
+                <ChevronRight size={16} className="op-action-arrow" />
+              </div>
+
+              <div className="op-action-box" onClick={() => setActiveTab('georeference')}>
+                <div className="op-action-icon amber">
+                  <MapPinned size={20} />
+                </div>
+                <div className="op-action-content">
+                  <h4>Cadastral Geo-Reference</h4>
+                  <p>Pin survey boundaries to satellite cadastre</p>
+                </div>
+                <ChevronRight size={16} className="op-action-arrow" />
+              </div>
+
+              <div className="op-action-box" onClick={() => setActiveTab('review')}>
+                <div className="op-action-icon purple">
+                  <PencilLine size={20} />
+                </div>
+                <div className="op-action-content">
+                  <h4>Verify & Approve</h4>
+                  <p>Side-by-side verification with legacy records</p>
+                </div>
+                <ChevronRight size={16} className="op-action-arrow" />
+              </div>
             </div>
           </div>
         </div>
-      </>
+
+        {/* Bottom Row: Recent Records Table + Live System Updates */}
+        <div className="op-bottom-grid">
+          {/* Recent Records Table */}
+          <div className="op-panel op-table-card">
+            <div className="op-table-header">
+              <div>
+                <h3 className="op-panel-title">Recent Documents</h3>
+                <p className="op-panel-subtitle">Review, inspect or edit extracted records</p>
+              </div>
+              <div className="op-table-filters">
+                <div className="op-filter-pills">
+                  {['all', 'review', 'processing', 'validated'].map(k => (
+                    <button
+                      key={k}
+                      className={`op-filter-pill ${dashFilter === k ? 'active' : ''}`}
+                      onClick={() => setDashFilter(k)}
+                    >
+                      {k === 'all' ? 'All' : k === 'review' ? 'Needs Review' : k === 'processing' ? 'In Progress' : 'Validated'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="op-table-responsive">
+              <table className="op-data-table">
+                <thead>
+                  <tr>
+                    <th>Document ID</th>
+                    <th>Survey / Village</th>
+                    <th>Type</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filterDocs.slice(0, 6).map((doc, idx) => {
+                    const isRev = doc.status === 'review';
+                    const isVal = doc.status === 'validated' || doc.status === 'submitted';
+                    return (
+                      <tr key={doc.id || idx}>
+                        <td>
+                          <div className="op-doc-cell">
+                            <FileText size={15} className="op-doc-icon" />
+                            <span className="op-doc-id">{doc.id || `LR-10${idx + 20}`}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="op-cell-main">
+                            <span className="op-survey-no">Survey #{doc.survey || '125/2'}</span>
+                            <span className="op-village-name">{doc.village || 'Kinathukadavu'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="op-type-tag">{doc.type || 'Patta Record'}</span>
+                        </td>
+                        <td>
+                          <div className="op-conf-cell">
+                            <div className="op-conf-bar">
+                              <div
+                                className="op-conf-fill"
+                                style={{ width: `${doc.confidence || 95}%` }}
+                              ></div>
+                            </div>
+                            <span className="op-conf-val">{doc.confidence || 95}%</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`op-status-badge ${isRev ? 'review' : isVal ? 'validated' : 'processing'}`}>
+                            {isRev ? 'Needs Review' : isVal ? 'Validated' : 'Processing'}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="op-table-act-btn"
+                            onClick={() => {
+                              if (isRev) {
+                                openReview(doc);
+                              } else {
+                                openViewDoc(doc.id);
+                              }
+                            }}
+                          >
+                            <Eye size={13} /> {isRev ? 'Review' : 'View'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filterDocs.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="op-empty-cell">
+                        No documents found matching the filter.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="op-table-footer">
+              <span>Showing {Math.min(filterDocs.length, 6)} of {filterDocs.length} records</span>
+              <button className="op-view-all-btn" onClick={() => setActiveTab('documents')}>
+                View All Records <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* System Updates Timeline */}
+          <div className="op-panel op-updates-card">
+            <div className="op-panel-header">
+              <div>
+                <h3 className="op-panel-title">System Updates</h3>
+                <p className="op-panel-subtitle">Real-time pipeline & audit events</p>
+              </div>
+            </div>
+            <div className="op-updates-list">
+              <div className="op-update-item">
+                <div className="op-update-icon green">
+                  <CheckCircle2 size={14} />
+                </div>
+                <div className="op-update-body">
+                  <p className="op-update-text"><strong>Document #TR-2024-884</strong> AI OCR extraction completed with 99.4% confidence</p>
+                  <span className="op-update-time">2 mins ago</span>
+                </div>
+              </div>
+
+              <div className="op-update-item">
+                <div className="op-update-icon blue">
+                  <MapPin size={14} />
+                </div>
+                <div className="op-update-body">
+                  <p className="op-update-text"><strong>Survey #125/2 Kinathukadavu</strong> boundary aligned to FMB grid coordinates</p>
+                  <span className="op-update-time">14 mins ago</span>
+                </div>
+              </div>
+
+              <div className="op-update-item">
+                <div className="op-update-icon purple">
+                  <ShieldCheck size={14} />
+                </div>
+                <div className="op-update-body">
+                  <p className="op-update-text"><strong>Tahsildar approved</strong> Patta #PT-2024-1049 digital twin signature</p>
+                  <span className="op-update-time">45 mins ago</span>
+                </div>
+              </div>
+
+              <div className="op-update-item">
+                <div className="op-update-icon amber">
+                  <AlertTriangle size={14} />
+                </div>
+                <div className="op-update-body">
+                  <p className="op-update-text"><strong>Discrepancy detected:</strong> Area mismatch in Survey #88/2 (0.85 vs 0.88 ac)</p>
+                  <span className="op-update-time">1 hour ago</span>
+                </div>
+              </div>
+
+              <div className="op-update-item">
+                <div className="op-update-icon blue">
+                  <RefreshCw size={14} />
+                </div>
+                <div className="op-update-body">
+                  <p className="op-update-text"><strong>Batch Sync:</strong> 40 verified records exported to State LRMS database</p>
+                  <span className="op-update-time">2 hours ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -2426,7 +3010,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
               <div className="pipe-section" id="pipe-enhance">
                 <button type="button" className="pipe-label pipe-label-toggle" onClick={() => toggleSection('enhance')}>
                   <ScanLine size={13} /> IMAGE ENHANCEMENT
-                  {live.stage === 'preprocessing' && live.preSteps.length < PREPROCESS_STEPS.length && <span className="muted-inline">— running…</span>}
+                  {live.stage === 'preprocessing' && live.preSteps.length < PREPROCESS_STEPS.length && <span className="muted-inline">— running...</span>}
                   {live.stage !== 'preprocessing' && <span className="muted-inline">— complete</span>}
                   <span className="pipe-toggle-ic">{sectionOpen.enhance ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
                 </button>
@@ -2474,7 +3058,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                         ))}
                         {(!liveDoc?.pageMetrics || liveDoc.pageMetrics.length === 0) && (
                           <div style={{ color: 'var(--ink-faint)', fontSize: 11.5, fontStyle: 'italic', padding: 8 }}>
-                            Awaiting per-page metrics from AI pipeline…
+                            Awaiting per-page metrics from AI pipeline...
                           </div>
                         )}
                       </div>
@@ -2491,7 +3075,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                         );
                       })}
                       {live.stage === 'preprocessing' && live.preSteps.length === PREPROCESS_STEPS.length && (
-                        <div className="check-step active"><div className="c-dot"><Loader2 size={14} className="spin" /></div><span>Preparing for OCR…</span></div>
+                        <div className="check-step active"><div className="c-dot"><Loader2 size={14} className="spin" /></div><span>Preparing for OCR...</span></div>
                       )}
                     </div>
                     {live.stage === 'preprocess-ready' && (
@@ -2508,7 +3092,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                 <div className="pipe-section" id="pipe-ocr">
                   <button type="button" className="pipe-label pipe-label-toggle" onClick={() => toggleSection('ocr')}>
                     <FileText size={13} /> OCR / HTR
-                    <span className="muted-inline">— {live.stage === 'ocr' ? 'running…' : live.stage === 'ocr-paused' ? 'paused' : 'complete'}</span>
+                    <span className="muted-inline">— {live.stage === 'ocr' ? 'running...' : live.stage === 'ocr-paused' ? 'paused' : 'complete'}</span>
                     <span className="pipe-toggle-ic">{sectionOpen.ocr ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
                   </button>
                   {sectionOpen.ocr && (
@@ -2585,7 +3169,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                                 {f.unresolved ? (
                                   <span className="badge badge-rust" style={{ fontSize: 9.5, padding: '2px 6px', justifySelf: 'end' }}>Not extracted</span>
                                 ) : (
-                                  <span className={`conf ${confClass(f.confidence)}`}>{f.confidence}% {f.confidence >= 75 ? '✓' : '⚠'}</span>
+                                  <span className={`conf ${confClass(f.confidence)}`}>{f.confidence}% {f.confidence >= 75 ? 'Γ£ô' : '⚠️'}</span>
                                 )}
                               </div>
                             );
@@ -2970,7 +3554,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                         {f.unresolved ? (
                           <span className="badge badge-rust" style={{ fontSize: 10, padding: '2px 6px' }}>Not extracted — needs manual entry</span>
                         ) : (
-                          <span className={`conf ${confClass(f.confidence)}`}>{f.confidence}% {f.resolved ? '✓' : '⚠'}</span>
+                          <span className={`conf ${confClass(f.confidence)}`}>{f.confidence}% {f.resolved ? 'Γ£ô' : '⚠️'}</span>
                         )}
                       </div>
 
@@ -3089,7 +3673,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
             >
               <GitCompare size={13} />
               <span>{d.id}</span>
-              {isPipeline && d.id === activeId && <span className="badge badge-ink badge-tiny" style={{ animation: 'pulse 1.5s infinite' }}>● Current</span>}
+              {isPipeline && d.id === activeId && <span className="badge badge-ink badge-tiny" style={{ animation: 'pulse 1.5s infinite' }}>ΓùÅ Current</span>}
               <span className={`badge badge-${badgeTone} badge-tiny`}>
                 {badgeText}
               </span>
@@ -3117,7 +3701,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
             <div className="cv-item"><span className="cv-label">Reference DB</span><span className="cv-val mono">LRMS-1022 (Revenue DB)</span></div>
             <div className="cv-item">
               <span className="cv-label">Overall AI Confidence</span>
-              <span className={`cv-val conf ${confClass(confidenceScore)}`}>{confidenceScore}% {confidenceScore >= 75 ? '✓' : '⚠'}</span>
+              <span className={`cv-val conf ${confClass(confidenceScore)}`}>{confidenceScore}% {confidenceScore >= 75 ? 'Γ£ô' : '⚠️'}</span>
             </div>
             <div className="cv-item">
               <span className="cv-label">Validation Result</span>
@@ -3169,7 +3753,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
         <div className="panel-head">
           <h3>FIELD-BY-FIELD CROSS-CHECK (DOCUMENT VS. LRMS REFERENCE)</h3>
           <span className="muted" style={{ fontSize: 11.5 }}>
-            Tolerance: ±{AREA_TOLERANCE_ACRES} Acres for area · Strict string match for titles
+            Tolerance: ┬▒{AREA_TOLERANCE_ACRES} Acres for area · Strict string match for titles
           </span>
         </div>
         <div className="panel-body" style={{ padding: 0 }}>
@@ -3190,7 +3774,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                       <td><b>{c.label}</b></td>
                       <td className={`mono ${isFail ? 'cv-cell-fail' : ''}`}>{c.documentValue || '—'}</td>
                       <td className="mono"><b>{c.referenceValue || '—'}</b></td>
-                      <td><span className={`conf ${confClass(fConf)}`}>{fConf}% {fConf >= 75 ? '✓' : '⚠'}</span></td>
+                      <td><span className={`conf ${confClass(fConf)}`}>{fConf}% {fConf >= 75 ? 'Γ£ô' : '⚠️'}</span></td>
                       <td>
                         <span className={`cv-status-badge ${isFail ? 'fail' : 'pass'}`}>
                           {isFail ? <><AlertTriangle size={12} /> MISMATCH</> : <><CheckCircle2 size={12} /> PASS</>}
@@ -3565,7 +4149,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                           <td className="mono">{gcp.lat}°N, {gcp.long}°E</td>
                           <td>
                             <span className={`conf ${gcp.error <= 0.15 ? 'high' : 'mid'}`}>
-                              ±{gcp.error} m
+                              ┬▒{gcp.error} m
                             </span>
                           </td>
                           <td>
@@ -3893,7 +4477,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                   <span className="fv mono">
                     {f.normalized ? <><span style={{ textDecoration: 'line-through', color: 'var(--ink-faint)', marginRight: 6 }}>{f.originalValue}</span>{' → '}<b style={{ color: 'var(--green)' }}>{f.value}</b></> : f.value}
                   </span>
-                  <span className={`conf ${confClass(f.confidence)}`}>{f.confidence}% {f.confidence >= 75 ? '✓' : '⚠'}</span>
+                  <span className={`conf ${confClass(f.confidence)}`}>{f.confidence}% {f.confidence >= 75 ? 'Γ£ô' : '⚠️'}</span>
                 </div>
               ))}
             </div>
@@ -3914,7 +4498,7 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
                     <span className="fk">{g.name}</span>
                     <span className="fv mono" style={{ fontSize: 12 }}>Scan: ({g.srcX}%, {g.srcY}%)</span>
                     <span className="fv mono" style={{ fontSize: 12 }}>GPS: {g.lat}°N, {g.long}°E</span>
-                    <span className={`conf ${g.error <= 0.15 ? 'high' : 'mid'}`}>±{g.error}m</span>
+                    <span className={`conf ${g.error <= 0.15 ? 'high' : 'mid'}`}>┬▒{g.error}m</span>
                   </div>
                 ))}
               </div>
@@ -4192,13 +4776,13 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} no-print`}>
         <div className="sb-top">
           <div className="brand">
-            <div className="brand-mark">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M4 20V10L12 4L20 10V20" stroke="white" strokeWidth="1.8" strokeLinejoin="round" />
-                <path d="M9 20V14H15V20" stroke="white" strokeWidth="1.8" />
-              </svg>
-            </div>
-            {!collapsed && <span className="brand-name">Land<em>Intel</em></span>}
+            <img src={logoImg} alt="NilOra" style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }} />
+            {!collapsed && (
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: '#1b4332', letterSpacing: '-0.02em' }}>NilOra</span>
+                <span style={{ fontSize: '9px', fontWeight: 600, color: '#2d6a4f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OPERATOR PORTAL</span>
+              </div>
+            )}
           </div>
           <button className="sb-toggle" onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
@@ -4285,12 +4869,37 @@ export default function OperatorDashboard({ userName = 'Operator', onLogout = ()
       <div className="main">
         <header className="topbar no-print">
           <div className="tb-left">
-            <span className="tb-title">LandIntel</span>
-            <span className="tb-chip">Operator</span>
+            <div className="tb-badge-status">
+              <span className="tb-dot-green"></span>
+              <div className="tb-badge-text">
+                <span className="tb-badge-title">Field &amp; Verification Officer</span>
+                <span className="tb-badge-sub">Tamil Nadu Land Records Digitization</span>
+              </div>
+            </div>
+          </div>
+          <div className="tb-center">
+            <div className="tb-search-pill">
+              <Search size={15} className="tb-search-icon" />
+              <input
+                type="text"
+                placeholder="Search records, survey number, owner name..."
+                value={dashSearch}
+                onChange={(e) => setDashSearch(e.target.value)}
+              />
+            </div>
           </div>
           <div className="tb-right">
-            <div className="tb-search"><Search size={14} /><input placeholder="Search records…" /></div>
-            <div className="tb-user"><MapPin size={13} /> {userName}</div>
+            <button className="tb-notif-btn" title="Notifications">
+              <Bell size={18} />
+              <span className="tb-notif-dot"></span>
+            </button>
+            <div className="tb-user-profile">
+              <div className="tb-user-avatar">FV</div>
+              <div className="tb-user-info">
+                <span className="tb-user-role">Field &amp; Verification Officer</span>
+              </div>
+              <ChevronDown size={14} className="tb-user-chevron" />
+            </div>
           </div>
         </header>
         <div className="page">{renderContent()}</div>
@@ -4382,12 +4991,12 @@ function GeoOldMapPane({ doc, gcps, activeGcpId, onSelectGcp, onPlacePoint }) {
           <>
             <path d="M 40,110 L 540,110" fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="6 3" />
             <text x="280" y="98" fill="#334155" fontSize="9" fontWeight="600" fontFamily="IBM Plex Mono" textAnchor="middle">
-              ─── NORTH BOUNDARY: LAND OF PERUMAL CHETTY (பெருமாள் செட்டி நிலம்) ───
+              ━━━ NORTH BOUNDARY: LAND OF PERUMAL CHETTY (பெருமாள் செட்டி நிலம்) ━━━
             </text>
 
             <path d="M 40,430 L 540,420" fill="none" stroke="#0284c7" strokeWidth="4" opacity="0.8" />
             <text x="280" y="445" fill="#0369a1" fontSize="9" fontWeight="600" fontFamily="IBM Plex Mono" textAnchor="middle">
-              ≈≈≈ SOUTH BOUNDARY: VILLAGE IRRIGATION CHANNEL (கிராம வாய்க்கால்) ≈≈≈
+              〜〜〜 SOUTH BOUNDARY: VILLAGE IRRIGATION CHANNEL (கிராம வாய்க்கால்) 〜〜〜
             </text>
 
             <polygon points="120,150 480,165 440,390 140,380" fill="url(#diagonalHatch)" stroke="#1b2a41" strokeWidth="2.8" />
@@ -4417,7 +5026,7 @@ function GeoOldMapPane({ doc, gcps, activeGcpId, onSelectGcp, onPlacePoint }) {
           <>
             <path d="M 40,110 Q 280,85 540,120" fill="none" stroke="#0284c7" strokeWidth="4" strokeDasharray="8 4" opacity="0.8" />
             <text x="280" y="98" fill="#0369a1" fontSize="9" fontWeight="600" fontFamily="IBM Plex Mono" textAnchor="middle">
-              ≈≈≈ CAUVERY RIVER BRANCH / TEMPLE IRRIGATION CHANNEL (கொள்ளிடம் / வாய்க்கால்) ≈≈≈
+              〜〜〜 CAUVERY RIVER BRANCH / TEMPLE IRRIGATION CHANNEL (கொள்ளிடம் / வாய்க்கால்) 〜〜〜
             </text>
 
             <path d="M 40,430 L 540,420" fill="none" stroke="#78716c" strokeWidth="6" opacity="0.7" />
@@ -4506,8 +5115,15 @@ function GeoRealMapPane({ doc, gcps, activeGcpId, onSelectGcp, onPlacePoint, lea
   const mapDivRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef({});
+  const polygonRef = useRef(null);
+  const [mapLayer, setMapLayer] = useState('satellite');
 
   const isReady = leafletReady || (typeof window !== 'undefined' && !!window.L);
+
+  // Extract survey and village from doc
+  const surveyNo = doc?.survey || doc?.extractedData?.surveyNumber || doc?.metadata?.surveyNumber || '125/2';
+  const villageName = doc?.village || doc?.extractedData?.village || doc?.metadata?.village || 'Kinathukadavu';
+  const parcelInfo = getSurveyParcelInfo(surveyNo, villageName);
 
   useEffect(() => {
     if (!isReady || !mapDivRef.current || mapRef.current) return;
@@ -4519,35 +5135,40 @@ function GeoRealMapPane({ doc, gcps, activeGcpId, onSelectGcp, onPlacePoint, lea
         delete mapDivRef.current._leaflet_id;
       }
 
-      const isAnaimalai = doc?.id === 'LR-1028' || doc?.id === 'LR-1014' || doc?.survey === '118/3';
-      const initialLat = isAnaimalai ? 10.5825 : 10.8240;
-      const initialLng = isAnaimalai ? 76.9292 : 77.0130;
-
       const map = L.map(mapDivRef.current, {
-        center: [gcps[0]?.lat || initialLat, gcps[0]?.long || initialLng],
+        center: [parcelInfo.lat, parcelInfo.long],
         zoom: 17,
         zoomControl: true,
+        maxZoom: 20,
       });
 
-      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // 1. High-Resolution Esri World Imagery Satellite Base Layer (Default)
+      const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors',
+        attribution: 'Esri Satellite Imagery • Maxar • Earthstar'
       }).addTo(map);
 
-      const bhuvan = L.tileLayer.wms('https://bhuvan-vec1.nrsc.gov.in/bhuvan/gwc/service/wms', {
-        layers: 'bhuvan:india3',
-        format: 'image/png',
-        transparent: false,
-        attribution: '© ISRO/NRSC Bhuvan',
+      // 2. OpenStreetMap Layer
+      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
       });
 
-      const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics',
-      });
+      // 3. CartoDB Positron / Hybrid labels
+      const labelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        pane: 'overlayPane'
+      }).addTo(map);
 
+      // Layer Control
       L.control.layers(
-        { 'OpenStreetMap (Base)': osm, 'Bhuvan (ISRO WMS)': bhuvan, 'Satellite Hybrid': satellite },
-        null,
+        {
+          '🛰️ Satellite (Esri)': satelliteLayer,
+          '🗺️ OpenStreetMap': osmLayer
+        },
+        {
+          '🏷️ Road & Cadastral Labels': labelsLayer
+        },
         { position: 'topright' }
       ).addTo(map);
 
@@ -4565,29 +5186,89 @@ function GeoRealMapPane({ doc, gcps, activeGcpId, onSelectGcp, onPlacePoint, lea
     };
   }, [isReady]);
 
+  // Update map view and draw cadastral boundary polygon when survey number / doc changes
   useEffect(() => {
-    if (!mapRef.current || !gcps || gcps.length === 0) return;
-    const targetLat = gcps[0]?.lat;
-    const targetLng = gcps[0]?.long;
-    if (targetLat && targetLng) {
-      mapRef.current.setView([targetLat, targetLng], 17, { animate: true });
-    }
-  }, [doc?.id]);
+    if (!mapRef.current || !window.L) return;
+    const L = window.L;
+    const info = getSurveyParcelInfo(surveyNo, villageName);
 
+    // Fly to the survey parcel location
+    mapRef.current.flyTo([info.lat, info.long], 17.5, { duration: 1.2 });
+
+    // Remove previous polygon
+    if (polygonRef.current) {
+      mapRef.current.removeLayer(polygonRef.current);
+      polygonRef.current = null;
+    }
+
+    // Draw high-contrast Cadastral Parcel Polygon for the extracted survey number
+    if (info.polygon && info.polygon.length > 0) {
+      const poly = L.polygon(info.polygon, {
+        color: '#f59e0b',
+        weight: 3,
+        opacity: 0.95,
+        fillColor: '#10b981',
+        fillOpacity: 0.28,
+        dashArray: '6, 6'
+      }).addTo(mapRef.current);
+
+      poly.bindPopup(
+        `<div style="font-family: sans-serif; font-size: 13px; color: #0f172a; padding: 4px;">
+          <div style="font-weight: 800; font-size: 14px; color: #166534; margin-bottom: 4px;">
+            📍 Survey #${surveyNo}
+          </div>
+          <div style="color: #334155; margin-bottom: 2px;"><strong>Village:</strong> ${info.village}, ${info.taluk}</div>
+          <div style="color: #334155; margin-bottom: 2px;"><strong>Extent:</strong> ${info.area}</div>
+          <div style="color: #334155;"><strong>Owner:</strong> ${info.owner}</div>
+          <div style="margin-top: 6px; font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 3px 6px; border-radius: 4px; font-weight: 600;">
+            🛰️ Satellite Cadastral Boundary Aligned
+          </div>
+        </div>`
+      );
+
+      polygonRef.current = poly;
+    }
+  }, [doc?.id, surveyNo, villageName]);
+
+  // Render GCP Marker Pins on Satellite Map
   useEffect(() => {
     if (!mapRef.current || !window.L) return;
     const L = window.L;
     Object.values(markersRef.current).forEach(m => mapRef.current.removeLayer(m));
     markersRef.current = {};
+
     gcps.forEach((g, i) => {
+      const isSelected = g.id === activeGcpId;
       const marker = L.marker([g.lat, g.long], {
         icon: L.divIcon({
           className: '',
-          html: `<div style="background:${g.id === activeGcpId ? '#D85A30' : '#1B2A41'};color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:${g.id === activeGcpId ? '0 0 0 4px rgba(216,90,48,0.35), 0 2px 8px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.3)'};transform:translate(-50%,-50%);">${i + 1}</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
+          html: `<div style="
+            background: ${isSelected ? '#ef4444' : '#1b4332'};
+            color: #ffffff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            border: 2.5px solid #ffffff;
+            box-shadow: ${isSelected ? '0 0 0 4px rgba(239, 68, 68, 0.4), 0 3px 8px rgba(0,0,0,0.5)' : '0 2px 6px rgba(0,0,0,0.4)'};
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+          ">${i + 1}</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
         }),
       }).addTo(mapRef.current);
+
+      marker.bindTooltip(`<strong>GCP #${i + 1}</strong>: ${g.name || 'Boundary Corner Stone'}`, {
+        direction: 'top',
+        offset: [0, -14],
+        className: 'gcp-tooltip'
+      });
+
       marker.on('click', (e) => {
         L.DomEvent.stopPropagation(e);
         onSelectGcp(g.id);
@@ -4597,13 +5278,62 @@ function GeoRealMapPane({ doc, gcps, activeGcpId, onSelectGcp, onPlacePoint, lea
   }, [gcps, activeGcpId]);
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: 480, position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: 480, position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1.5px solid #cbd5e1' }}>
+      {/* Top Map HUD overlay bar */}
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        zIndex: 400,
+        background: 'rgba(15, 23, 42, 0.88)',
+        backdropFilter: 'blur(6px)',
+        color: '#ffffff',
+        padding: '6px 12px',
+        borderRadius: 8,
+        fontSize: 12,
+        fontWeight: 600,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+        border: '1px solid rgba(255,255,255,0.15)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }}></span>
+          <span style={{ color: '#38bdf8' }}>🛰️ Satellite Cadastre</span>
+        </div>
+        <span style={{ color: '#94a3b8' }}>|</span>
+        <span style={{ color: '#ffffff' }}>Survey <strong>#{surveyNo}</strong> ({parcelInfo.village})</span>
+        <span style={{ color: '#94a3b8' }}>|</span>
+        <span style={{ color: '#fef08a' }}>{parcelInfo.area}</span>
+        <button
+          onClick={() => {
+            if (mapRef.current) {
+              mapRef.current.flyTo([parcelInfo.lat, parcelInfo.long], 18, { duration: 0.8 });
+            }
+          }}
+          style={{
+            background: '#1e293b',
+            color: '#38bdf8',
+            border: '1px solid #475569',
+            padding: '2px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            cursor: 'pointer',
+            fontWeight: 700
+          }}
+          title="Re-center on extracted survey coordinates"
+        >
+          🎯 Re-center
+        </button>
+      </div>
+
       {!isReady && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1b2430', color: '#fff', borderRadius: 4, zIndex: 5 }}>
-          <Loader2 size={20} className="spin" style={{ marginRight: 8 }} /> Loading GIS Engine (Leaflet &amp; ISRO Bhuvan)...
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#fff', borderRadius: 4, zIndex: 500 }}>
+          <Loader2 size={22} className="spin" style={{ marginRight: 8, color: '#38bdf8' }} /> Loading High-Res GIS Satellite Engine...
         </div>
       )}
-      <div ref={mapDivRef} style={{ width: '100%', height: '100%', minHeight: 480, borderRadius: 4, border: '1px solid var(--line-strong)' }} />
+      <div ref={mapDivRef} style={{ width: '100%', height: '100%', minHeight: 480 }} />
     </div>
   );
 }
@@ -4671,7 +5401,7 @@ function iconForNode(n) {
   if (n.type === 'owner') {
     const isInstitution = /TRUST|TEMPLE|DEVSTHANAM|BOARD|DEPT/.test((n.label || '').toUpperCase());
     if (isInstitution) return '🏛️';
-    return '👨';
+    return '👤';
   }
   if (n.type === 'document') return '📜';
   if (n.type === 'survey') return '📍';
@@ -4679,7 +5409,7 @@ function iconForNode(n) {
   if (n.type === 'area') return '📐';
   if (n.type === 'reference') return '🏛️';
   if (n.type === 'discrepancy') return '⚠️';
-  return '●';
+  return 'ΓùÅ';
 }
 
 function EvidenceGraphPane({ docsList, targetDocId, d3Ready, onSelectDoc }) {
@@ -4752,7 +5482,7 @@ function EvidenceGraphPane({ docsList, targetDocId, d3Ready, onSelectDoc }) {
   if (!layout) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 440, color: 'var(--ink-faint)', background: 'var(--paper)' }}>
-        <Loader2 size={18} className="spin" style={{ marginRight: 8 }} /> Loading Essential Evidence Graph…
+        <Loader2 size={18} className="spin" style={{ marginRight: 8 }} /> Loading Essential Evidence Graph...
       </div>
     );
   }
@@ -4797,7 +5527,7 @@ function EvidenceGraphPane({ docsList, targetDocId, d3Ready, onSelectDoc }) {
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.document, display: 'inline-block' }} /> 📜 Document
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.owner, display: 'inline-block' }} /> 👨/🏛️ Owner / Trust
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.owner, display: 'inline-block' }} /> 👤/🏛️ Owner / Trust
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.survey, display: 'inline-block' }} /> 📍 Survey No
@@ -4809,12 +5539,12 @@ function EvidenceGraphPane({ docsList, targetDocId, d3Ready, onSelectDoc }) {
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.village, display: 'inline-block' }} /> 🏘️ Village
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.reference, display: 'inline-block' }} /> 🛕 Beneficiary
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: colorFor.reference, display: 'inline-block' }} /> 🏛️ Beneficiary
           </span>
         </div>
         {selectedNode && (
           <button className="btn btn-outline btn-sm" style={{ padding: '2px 8px', height: 22, fontSize: 11 }} onClick={() => setSelectedNode(null)}>
-            Clear Selection ({selectedNode.label}) ✕
+            Clear Selection ({selectedNode.label}) Γ£ò
           </button>
         )}
       </div>
@@ -5162,7 +5892,7 @@ function DigitizedPage({ doc }) {
               <td style={{ padding: '6px 10px', fontFamily: 'monospace', fontWeight: 600, color: '#1b2a41' }}>{f.value || '—'}</td>
               <td style={{ padding: '6px 10px', textAlign: 'center', fontFamily: 'monospace' }}>{f.confidence || 96}%</td>
               <td style={{ padding: '6px 10px', textAlign: 'center' }}>
-                <span style={{ color: '#2F4A3D', fontWeight: 600 }}>✓ Verified</span>
+                <span style={{ color: '#2F4A3D', fontWeight: 600 }}>Γ£ô Verified</span>
               </td>
             </tr>
           ))}
@@ -5221,6 +5951,1075 @@ function EmptyState({ icon: Icon, title, sub }) {
    ========================================================================= */
 
 const CSS = `
+/* =========================================================================
+   EXACT HORIZONTAL KPI CARDS (Matching Right-Side Reference Screenshot)
+   ========================================================================= */
+.op-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px !important;
+  margin-bottom: 22px !important;
+}
+.op-kpi-card {
+  background: #ffffff !important;
+  border-radius: 14px !important;
+  padding: 16px 18px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+  position: relative !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  min-height: 84px !important;
+}
+.op-kpi-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+  border-color: #7bc69e !important;
+}
+.op-kpi-icon-square {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+.op-kpi-icon-square.green {
+  background: #eaf8f0 !important;
+  color: #16a34a !important;
+}
+.op-kpi-icon-square.blue {
+  background: #eaf4ff !important;
+  color: #0284c7 !important;
+}
+.op-kpi-icon-square.orange {
+  background: #fff4eb !important;
+  color: #ea580c !important;
+}
+.op-kpi-icon-square.purple {
+  background: #f4eefb !important;
+  color: #9333ea !important;
+}
+.op-kpi-content {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  flex: 1 !important;
+}
+.op-kpi-number {
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.1 !important;
+  margin: 0 0 2px 0 !important;
+}
+.op-kpi-label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  text-transform: none !important;
+  margin: 0 !important;
+  letter-spacing: 0 !important;
+}
+.op-kpi-badge-wrap {
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 14px !important;
+  margin: 0 !important;
+}
+.op-kpi-badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+.op-kpi-badge.green {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+.op-kpi-badge.blue {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+.op-kpi-badge.orange {
+  background: #ffedd5 !important;
+  color: #c2410c !important;
+}
+
+/* =========================================================================
+   MILD MINT GREEN THEME & TOPBAR STYLES (Matching User Reference)
+   ========================================================================= */
+.op-dash {
+  background: #eef7f2 !important;
+}
+.op-dash .main {
+  background: #eef7f2 !important;
+}
+.op-dash .page {
+  background: #eef7f2 !important;
+  padding: 24px 32px !important;
+}
+
+/* Topbar Styling */
+.topbar {
+  height: 68px !important;
+  background: #eef7f2 !important;
+  border-bottom: 1px solid rgba(123, 198, 158, 0.35) !important;
+  padding: 0 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+.tb-left {
+  display: flex;
+  align-items: center;
+}
+.tb-badge-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tb-dot-green {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+.tb-badge-text {
+  display: flex;
+  flex-direction: column;
+}
+.tb-badge-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.tb-badge-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+.tb-center {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 24px;
+}
+.tb-search-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 24px;
+  padding: 8px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.tb-search-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+.tb-search-pill input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: #0f172a;
+  width: 100%;
+}
+.tb-search-pill input::placeholder {
+  color: #94a3b8;
+}
+.tb-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tb-notif-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e293b;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+.tb-notif-btn:hover {
+  background: #f8fafc;
+}
+.tb-notif-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+.tb-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 4px 12px 4px 5px;
+  border-radius: 24px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.tb-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1b4332;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tb-user-info {
+  display: flex;
+  flex-direction: column;
+}
+.tb-user-role {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.tb-user-chevron {
+  color: #64748b;
+}
+
+/* Welcome Row */
+.op-welcome-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.op-welcome-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+}
+.op-welcome-name {
+  color: #0f172a;
+}
+.op-welcome-sub {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+.op-date-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+.op-date-icon-box {
+  color: #166534;
+}
+.op-date-details {
+  display: flex;
+  flex-direction: column;
+}
+.op-date-main {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.op-date-day {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* 4 KPI Cards Matching Reference Screenshot */
+.op-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.op-kpi-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.op-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: #7bc69e;
+}
+.op-kpi-icon-square {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.op-kpi-icon-square.green {
+  background: #e8f5e9;
+  color: #16a34a;
+}
+.op-kpi-icon-square.blue {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.op-kpi-icon-square.orange {
+  background: #fff7ed;
+  color: #ea580c;
+}
+.op-kpi-icon-square.purple {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+.op-kpi-content {
+  flex: 1;
+}
+.op-kpi-number {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+.op-kpi-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+.op-kpi-badge-wrap {
+  align-self: flex-end;
+  margin-bottom: 4px;
+}
+.op-kpi-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.op-kpi-badge.green {
+  background: #dcfce7;
+  color: #166534;
+}
+.op-kpi-badge.blue {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.op-kpi-badge.orange {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+/* =========================================================================
+   OPERATOR DASHBOARD OVERVIEW & SIDEBAR THEME (Matching operaotr.png)
+   ========================================================================= */
+.sidebar {
+  background: linear-gradient(180deg, #c5ebd7 0%, #b2dfc8 100%) !important;
+  border-right: 1.5px solid #7bc69e !important;
+  color: #1b4332 !important;
+}
+.sidebar .sb-top {
+  border-bottom: 1px solid rgba(45, 106, 79, 0.15) !important;
+}
+.sidebar .sb-group-label {
+  color: #2d6a4f !important;
+  font-weight: 700 !important;
+}
+.sidebar .sb-item {
+  color: #1b4332 !important;
+  font-weight: 500 !important;
+}
+.sidebar .sb-item:hover {
+  background: rgba(45, 106, 79, 0.12) !important;
+  color: #081c15 !important;
+}
+.sidebar .sb-item.active {
+  background: #1b4332 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(27, 67, 50, 0.25) !important;
+}
+.sidebar .sb-bottom {
+  border-top: 1px solid rgba(45, 106, 79, 0.15) !important;
+}
+.sidebar .sb-toggle {
+  color: #1b4332 !important;
+}
+.sidebar .sb-toggle:hover {
+  background: rgba(45, 106, 79, 0.15) !important;
+}
+
+.op-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Hero Banner - Clean Light High-Contrast */
+.op-hero-banner {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px 26px;
+  border: 1.5px solid #e2e8f0;
+  color: #0f172a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.op-hero-content {
+  max-width: 65%;
+}
+.op-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+.live-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+.op-hero-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+.op-hero-desc {
+  font-size: 13.5px;
+  color: #475569;
+  margin: 0;
+  line-height: 1.5;
+}
+.op-hero-actions {
+  display: flex;
+  gap: 12px;
+}
+.op-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1b4332;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(27, 67, 50, 0.2);
+  transition: all 0.2s ease;
+}
+.op-btn-primary:hover {
+  background: #2d6a4f;
+  transform: translateY(-1px);
+}
+.op-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: 1.5px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.op-btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* 4 KPI Grid */
+.op-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.op-kpi-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.op-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+.op-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.op-kpi-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.op-kpi-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.op-kpi-icon-wrap.emerald {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.op-kpi-icon-wrap.blue {
+  background: #e1f5fe;
+  color: #0288d1;
+}
+.op-kpi-icon-wrap.amber {
+  background: #fff8e1;
+  color: #f57f17;
+}
+.op-kpi-icon-wrap.purple {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+.op-kpi-val {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.op-kpi-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.op-trend-up {
+  color: #16a34a;
+  font-weight: 700;
+  background: #dcfce7;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.op-badge-blue {
+  color: #0284c7;
+  font-weight: 700;
+  background: #e0f2fe;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.op-badge-amber {
+  color: #d97706;
+  font-weight: 700;
+  background: #fef3c7;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.op-kpi-sub {
+  color: #6b7280;
+}
+
+/* Middle Row */
+.op-middle-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 16px;
+}
+.op-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+.op-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.op-panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 3px 0;
+}
+.op-panel-subtitle {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0;
+}
+.op-chip.green {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.op-progress-body {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.op-gauge-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+.op-gauge-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+.op-gauge-bg {
+  fill: none;
+  stroke: #f3f4f6;
+  stroke-width: 12;
+}
+.op-gauge-fill {
+  fill: none;
+  stroke: #2e7d32;
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+}
+.op-gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.op-gauge-pct {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+.op-gauge-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.op-progress-breakdown {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.op-prog-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.op-prog-label-row {
+  display: flex;
+  align-items: center;
+  font-size: 12.5px;
+}
+.op-prog-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.op-prog-dot.green { background: #2e7d32; }
+.op-prog-dot.blue { background: #0288d1; }
+.op-prog-dot.amber { background: #f57f17; }
+.op-prog-name {
+  color: #374151;
+  font-weight: 600;
+  flex: 1;
+}
+.op-prog-count {
+  font-weight: 700;
+  color: #111827;
+  font-size: 12px;
+}
+.op-bar-track {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.op-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+.op-bar-fill.green { background: linear-gradient(90deg, #52b788, #2e7d32); }
+.op-bar-fill.blue { background: linear-gradient(90deg, #38bdf8, #0288d1); }
+.op-bar-fill.amber { background: linear-gradient(90deg, #fbbf24, #d97706); }
+
+.op-progress-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 14px;
+}
+.op-foot-stat {
+  display: flex;
+  flex-direction: column;
+}
+.op-foot-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+.op-foot-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+.op-foot-divider {
+  width: 1px;
+  height: 24px;
+  background: #e5e7eb;
+}
+
+/* Quick Actions (2x2 Grid) */
+.op-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.op-action-box {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.op-action-box:hover {
+  background: #ffffff;
+  border-color: #7bc69e;
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.08);
+  transform: translateY(-1px);
+}
+.op-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.op-action-icon.emerald { background: #e8f5e9; color: #2e7d32; }
+.op-action-icon.blue { background: #e1f5fe; color: #0288d1; }
+.op-action-icon.amber { background: #fff8e1; color: #f57f17; }
+.op-action-icon.purple { background: #f3e5f5; color: #7b1fa2; }
+.op-action-content {
+  flex: 1;
+}
+.op-action-content h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 2px 0;
+}
+.op-action-content p {
+  font-size: 11.5px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.3;
+}
+.op-action-arrow {
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+.op-action-box:hover .op-action-arrow {
+  transform: translateX(3px);
+  color: #2e7d32;
+}
+
+/* Bottom Grid */
+.op-bottom-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 16px;
+}
+.op-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.op-filter-pills {
+  display: flex;
+  gap: 6px;
+}
+.op-filter-pill {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.op-filter-pill.active {
+  background: #1b4332;
+  color: #ffffff;
+  border-color: #1b4332;
+}
+.op-table-responsive {
+  overflow-x: auto;
+}
+.op-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.op-data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.op-data-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+.op-doc-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.op-doc-icon {
+  color: #6b7280;
+}
+.op-doc-id {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  color: #111827;
+  font-size: 12px;
+}
+.op-cell-main {
+  display: flex;
+  flex-direction: column;
+}
+.op-survey-no {
+  font-weight: 600;
+  color: #111827;
+}
+.op-village-name {
+  font-size: 11px;
+  color: #6b7280;
+}
+.op-type-tag {
+  font-size: 11.5px;
+  color: #374151;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.op-conf-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.op-conf-bar {
+  width: 50px;
+  height: 5px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.op-conf-fill {
+  height: 100%;
+  background: #2e7d32;
+  border-radius: 3px;
+}
+.op-conf-val {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #111827;
+}
+.op-status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+.op-status-badge.review {
+  background: #fef3c7;
+  color: #d97706;
+}
+.op-status-badge.validated {
+  background: #dcfce7;
+  color: #166534;
+}
+.op-status-badge.processing {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.op-table-act-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1b4332;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.op-table-act-btn:hover {
+  background: #2d6a4f;
+  color: #ffffff;
+}
+.op-empty-cell {
+  text-align: center;
+  color: #9ca3af;
+  padding: 24px !important;
+}
+.op-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+.op-view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #2d6a4f;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.op-view-all-btn:hover {
+  color: #1b4332;
+  text-decoration: underline;
+}
+
+/* System Updates */
+.op-updates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.op-update-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.op-update-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.op-update-icon.green { background: #e8f5e9; color: #2e7d32; }
+.op-update-icon.blue { background: #e1f5fe; color: #0288d1; }
+.op-update-icon.purple { background: #f3e5f5; color: #7b1fa2; }
+.op-update-icon.amber { background: #fff8e1; color: #f57f17; }
+.op-update-body {
+  flex: 1;
+}
+.op-update-text {
+  font-size: 12.5px;
+  color: #374151;
+  margin: 0 0 2px 0;
+  line-height: 1.4;
+}
+.op-update-text strong {
+  color: #111827;
+}
+.op-update-time {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
 :root{
   --ink:#1B2A41; --ink-soft:#3B4A63; --ink-faint:#7C879B;
   --paper:#F6F5F0; --paper-raised:#FFFFFF; --line:#DCD9CE; --line-strong:#C7C3B5;

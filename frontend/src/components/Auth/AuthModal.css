@@ -1,14 +1,14 @@
 /* ================================================================
    AuthModal.css — styles for the Auth Modal component
-   Mirrors the design from auth-module(1).html
+   Richer Sage Green & High-Contrast Cadastral Theme
    ================================================================ */
 
 /* ---------- Overlay ---------- */
 .am-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 14, 26, 0.72);
-  backdrop-filter: blur(4px);
+  background: rgba(3, 24, 14, 0.78);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -24,16 +24,18 @@
 
 /* ---------- Modal shell ---------- */
 .am-modal {
-  background: #ffffff;
+  background: #D4EADB;
+  border: 1.5px solid #9BC7A9;
   border-radius: 16px;
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 24px 60px rgba(2, 24, 13, 0.45);
   animation: am-slide-up 0.22s ease;
   display: flex;
   flex-direction: column;
+  color: #02180D;
 }
 
 @keyframes am-slide-up {
@@ -48,270 +50,300 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.5rem 1.5rem 1rem;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1.5px solid #9BC7A9;
+  background: #C2DDCB;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
 }
 
 .am-head h3 {
   margin: 0 0 0.25rem;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #02180D;
   line-height: 1.3;
 }
 
 .am-head p {
   margin: 0;
-  font-size: 0.84rem;
-  color: #64748b;
+  font-size: 0.88rem;
+  color: #0F3822;
+  font-weight: 600;
 }
 
 .am-back {
   background: none;
   border: none;
-  color: #2563eb;
-  font-size: 0.8rem;
+  color: #047857;
+  font-size: 0.84rem;
   cursor: pointer;
   padding: 0;
   margin-bottom: 0.35rem;
   display: inline-block;
-  font-weight: 500;
+  font-weight: 700;
 }
 
-.am-back:hover { text-decoration: underline; }
+.am-back:hover { text-decoration: underline; color: #065F46; }
 
 .am-close {
-  background: none;
-  border: none;
+  background: rgba(2, 24, 13, 0.08);
+  border: 1px solid #9BC7A9;
   font-size: 1.1rem;
-  color: #94a3b8;
+  color: #02180D;
+  font-weight: 700;
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 6px;
   line-height: 1;
   flex-shrink: 0;
   margin-top: -2px;
+  transition: all 0.15s;
 }
 
-.am-close:hover { background: #f1f5f9; color: #0f172a; }
+.am-close:hover { background: #E0F2E6; color: #02180D; border-color: #059669; }
 
 /* ---------- Body ---------- */
 .am-body {
   padding: 1.5rem;
   flex: 1;
+  background: #D4EADB;
 }
 
 /* ---------- Category grid ---------- */
 .am-category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .am-category-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1.1rem 0.75rem;
-  border: 2px solid #e2e8f0;
+  gap: 0.6rem;
+  padding: 1.2rem 0.85rem;
+  border: 1.5px solid #9BC7A9;
   border-radius: 12px;
-  background: #f8fafc;
+  background: #E5F5EC;
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition: all 0.18s ease;
   font-size: 0.88rem;
+  box-shadow: 0 2px 6px rgba(2, 24, 13, 0.06);
 }
 
 .am-category-card:hover {
-  border-color: #2563eb;
-  background: #eff6ff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+  border-color: #059669;
+  background: #F4FAF6;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.18);
+  transform: translateY(-2px);
 }
 
 .am-category-card b {
   display: block;
-  font-size: 0.9rem;
-  color: #0f172a;
+  font-size: 0.94rem;
+  color: #02180D;
+  font-weight: 800;
 }
 
 .am-category-icon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #dbeafe;
+  background: #A3DEC0;
+  border: 1px solid #6EE7B7;
   border-radius: 10px;
-  color: #2563eb;
+  color: #023D26;
 }
 
 .am-category-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .am-category-blurb {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.8rem;
+  color: #0F3822;
   line-height: 1.4;
+  font-weight: 500;
 }
 
 /* ---------- Government role list ---------- */
 .am-role-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .am-role-list-card {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
-  border: 2px solid #e2e8f0;
+  gap: 0.95rem;
+  padding: 0.95rem 1.1rem;
+  border: 1.5px solid #9BC7A9;
   border-radius: 10px;
-  background: #f8fafc;
+  background: #E5F5EC;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.15s ease;
   width: 100%;
 }
 
 .am-role-list-card:hover,
 .am-role-list-card.active {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: #059669;
+  background: #F4FAF6;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.16);
 }
 
 .am-role-list-icon {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   flex-shrink: 0;
 }
 
 .am-role-list-text {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
 }
 
 .am-role-list-text b {
-  font-size: 0.9rem;
-  color: #0f172a;
-  font-weight: 600;
+  font-size: 0.95rem;
+  color: #02180D;
+  font-weight: 800;
 }
 
 .am-role-list-text span {
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: 0.82rem;
+  color: #0F3822;
+  font-weight: 600;
 }
 
 /* ---------- Role summary bar (inside form) ---------- */
 .am-role-summary {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  gap: 0.75rem;
+  background: #E5F5EC;
+  border: 1.5px solid #9BC7A9;
   border-radius: 8px;
-  padding: 0.65rem 0.9rem;
-  margin-bottom: 1rem;
-  font-size: 0.87rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.1rem;
+  font-size: 0.88rem;
 }
 
-.am-role-icon { font-size: 1.3rem; }
+.am-role-icon { font-size: 1.35rem; }
 
 .am-role-info { flex: 1; }
-.am-role-info b { display: block; color: #1d4ed8; font-size: 0.88rem; }
+.am-role-info b { display: block; color: #023D26; font-size: 0.94rem; font-weight: 800; }
 
 .am-role-summary a {
-  color: #2563eb;
-  font-size: 0.8rem;
+  color: #047857;
+  font-size: 0.84rem;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
+  font-weight: 700;
 }
-.am-role-summary a:hover { text-decoration: underline; }
+.am-role-summary a:hover { text-decoration: underline; color: #065F46; }
 
 /* ---------- Form fields ---------- */
 .am-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.9rem;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
 }
 
 .am-field label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #374151;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #02180D;
+  letter-spacing: 0.02em;
 }
 
-.am-field input {
-  padding: 0.6rem 0.8rem;
-  border: 1.5px solid #d1d5db;
+.am-field input, .am-field select {
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid #9BC7A9;
   border-radius: 8px;
-  font-size: 0.9rem;
-  color: #0f172a;
-  background: #fff;
+  font-size: 0.94rem;
+  color: #02180D;
+  background: #FFFFFF;
+  font-weight: 600;
   outline: none;
+  box-shadow: 0 1px 3px rgba(2, 24, 13, 0.06);
   transition: border-color 0.15s, box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
 
-.am-field input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+.am-field input::placeholder {
+  color: #4B725C;
+  font-weight: 500;
+}
+
+.am-field input:focus, .am-field select:focus {
+  border-color: #059669;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
 }
 
 .am-field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 /* ---------- Error / notice ---------- */
 .am-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: #FEE2E2;
+  border: 1.5px solid #F87171;
   border-radius: 8px;
-  color: #b91c1c;
-  font-size: 0.83rem;
-  padding: 0.55rem 0.8rem;
-  margin-bottom: 0.75rem;
+  color: #991B1B;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 0.85rem;
 }
 
 .am-notice {
-  font-size: 0.8rem;
-  color: #64748b;
-  background: #f8fafc;
-  border-left: 3px solid #2563eb;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0 6px 6px 0;
-  margin-bottom: 0.9rem;
+  font-size: 0.84rem;
+  color: #02180D;
+  background: #E5F5EC;
+  border: 1px solid #9BC7A9;
+  border-left: 4px solid #059669;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 1rem;
   line-height: 1.5;
+  font-weight: 600;
 }
 
 /* ---------- Hints ---------- */
 .am-hint {
-  font-size: 0.82rem;
-  color: #64748b;
+  font-size: 0.86rem;
+  color: #0F3822;
   text-align: center;
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
+  font-weight: 600;
 }
 
 .am-hint a {
-  color: #2563eb;
+  color: #047857;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 800;
 }
-.am-hint a:hover { text-decoration: underline; }
+.am-hint a:hover { text-decoration: underline; color: #065F46; }
 
 .am-hint-muted {
-  font-size: 0.78rem;
-  color: #94a3b8;
+  font-size: 0.82rem;
+  color: #1E4630;
   text-align: center;
-  margin-top: 0.6rem;
+  margin-top: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 /* ---------- Pending state ---------- */
@@ -326,16 +358,17 @@
 }
 
 .am-pending p {
-  font-size: 0.9rem;
-  color: #374151;
+  font-size: 0.94rem;
+  color: #02180D;
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .am-pending-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #E5F5EC;
+  border: 1.5px solid #9BC7A9;
   border-radius: 10px;
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1.1rem;
   margin-bottom: 1rem;
   text-align: left;
 }
@@ -343,22 +376,24 @@
 .am-pending-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.84rem;
-  padding: 0.3rem 0;
-  border-bottom: 1px solid #f0f2f5;
-  color: #374151;
+  font-size: 0.88rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #B0D6BF;
+  color: #02180D;
+  font-weight: 600;
 }
 
 .am-pending-row:last-child { border-bottom: none; }
 
 .am-status-pending {
-  background: #fef3c7;
-  color: #92400e;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
+  background: #A3DEC0;
+  color: #023D26;
+  border: 1px solid #059669;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
   border-radius: 4px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 /* ---------- Buttons ---------- */
@@ -366,26 +401,31 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 1.25rem;
+  padding: 0.7rem 1.35rem;
   border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  transition: all 0.15s ease;
 }
 
 .btn:active { transform: scale(0.98); }
 
 .btn-primary {
-  background: #2563eb;
-  color: #ffffff;
+  background: #047857;
+  color: #FFFFFF;
+  border: 1px solid #065F46;
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.3);
 }
-.btn-primary:hover { background: #1d4ed8; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+.btn-primary:hover {
+  background: #065F46;
+  box-shadow: 0 4px 14px rgba(6, 95, 70, 0.4);
+}
 
 .btn-block {
   width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
 }
 
 /* ---------- Responsive ---------- */

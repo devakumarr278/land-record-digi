@@ -1,583 +1,773 @@
 import React, { useState, useEffect } from 'react';
 import {
-  LayoutDashboard, Users, KeyRound, Cpu, ListOrdered, Database,
-  AlertOctagon, Inbox, Settings as SettingsIcon, LogOut,
-  ChevronsLeft, ChevronsRight, Search, MapPin, X, Plus, RefreshCw,
-  CheckCircle2, XCircle, AlertTriangle, Server, Gauge, Activity,
-  Loader2, RotateCcw, UserPlus, ShieldCheck, Trash2, Eye
+  LayoutDashboard, Users, Shield, Cpu, ListOrdered, Database, AlertCircle,
+  Inbox, Settings as SettingsIcon, LogOut, Search, Bell, ChevronDown,
+  ChevronRight, X, Download, RefreshCw, UserPlus, Server, Cloud,
+  Share2, Activity, CheckCircle2, AlertTriangle, Play, Pause, RotateCcw,
+  Clock, ShieldCheck, Key, Lock, Trash2, Eye, Filter
 } from 'lucide-react';
+import logoImg from '../../assets/logo.jpg';
 
 /* =========================================================================
-   MOCK DATA
+   MOCK DATA (Matching sysadmin.png & System Admin Infrastructure)
    ========================================================================= */
 
 const INITIAL_USERS = [
-  { id: 'U-201', name: 'Meena R',        email: 'meena.r@tn.gov.in',        role: 'Field Officer',        status: 'active',   lastLogin: '2 mins ago' },
-  { id: 'U-202', name: 'Karthik S',      email: 'karthik.s@tn.gov.in',      role: 'Verification Officer', status: 'active',   lastLogin: '8 mins ago' },
-  { id: 'U-203', name: 'S. Iyer',        email: 's.iyer@tn.gov.in',         role: 'Tehsildar',            status: 'active',   lastLogin: '20 mins ago' },
-  { id: 'U-204', name: 'K. Prakash',     email: 'k.prakash@tn.gov.in',      role: 'District Admin',       status: 'active',   lastLogin: '1 hr ago' },
-  { id: 'U-205', name: 'R. Subramaniam', email: 'r.subramaniam@tn.gov.in',  role: 'Tehsildar',             status: 'inactive', lastLogin: '3 days ago' },
-  { id: 'U-206', name: 'Deepa N',        email: 'deepa.n@tn.gov.in',        role: 'Verification Officer', status: 'active',   lastLogin: '35 mins ago' },
-  { id: 'U-207', name: 'A. Chandran',    email: 'a.chandran@tn.gov.in',     role: 'Auditor',              status: 'active',   lastLogin: '1 hr ago' },
-  { id: 'U-208', name: 'V. Lakshmi',     email: 'v.lakshmi@tn.gov.in',      role: 'State Nodal Officer',  status: 'inactive', lastLogin: '6 days ago' },
-];
-
-const ROLES = [
-  { role: 'Citizen', users: 48210, perms: ['View own land records', 'Submit documents / grievances'] },
-  { role: 'Field & Verification Officer', users: 312, perms: ['Digitize documents', 'Upload records', 'Review AI extraction'] },
-  { role: 'Tehsildar / Sub-Registrar', users: 96, perms: ['Approve / reject mutations', 'Legal sign-off'] },
-  { role: 'District Administrator', users: 32, perms: ['Manage district workload', 'View district analytics'] },
-  { role: 'State Nodal Officer', users: 6, perms: ['Statewide monitoring', 'Manage integrations', 'Configure policies'] },
-  { role: 'Auditor', users: 11, perms: ['Read-only access to all records', 'Export compliance logs'] },
-  { role: 'System Administrator', users: 4, perms: ['Full infrastructure access', 'Manage users & roles'] },
+  { id: 'USR-01', name: 'Abishek B K', email: 'abishek@nilora.gov.in', role: 'System Administrator', status: 'Online', lastActive: 'Just now', district: 'State HQ' },
+  { id: 'USR-02', name: 'R. Subramaniam', email: 'subramaniam.r@tn.gov.in', role: 'District Administrator', status: 'Online', lastActive: '2 mins ago', district: 'Coimbatore' },
+  { id: 'USR-03', name: 'Dr. K. Prakash', email: 'prakash.k@tn.gov.in', role: 'State Nodal Officer', status: 'Online', lastActive: '8 mins ago', district: 'State HQ' },
+  { id: 'USR-04', name: 'Meena R', email: 'meena.r@rev.gov.in', role: 'Field & Verification Officer', status: 'Online', lastActive: '12 mins ago', district: 'Pollachi' },
+  { id: 'USR-05', name: 'S. Iyer', email: 'iyer.s@audit.gov.in', role: 'Auditor', status: 'Online', lastActive: '15 mins ago', district: 'State HQ' },
+  { id: 'USR-06', name: 'Karthik S', email: 'karthik.s@reg.gov.in', role: 'Registrar', status: 'Online', lastActive: '24 mins ago', district: 'Coimbatore' },
+  { id: 'USR-07', name: 'Deepa N', email: 'deepa.n@rev.gov.in', role: 'Field & Verification Officer', status: 'Offline', lastActive: '2 hours ago', district: 'Sulur' },
+  { id: 'USR-08', name: 'M. Anand', email: 'anand.m@rev.gov.in', role: 'Tahsildar', status: 'Offline', lastActive: 'Yesterday', district: 'Pollachi' }
 ];
 
 const AI_WORKERS = [
-  { id: 'GPU-01', status: 'active', load: 84, docs: 412, uptime: '14d 6h' },
-  { id: 'GPU-02', status: 'active', load: 76, docs: 388, uptime: '14d 6h' },
-  { id: 'GPU-03', status: 'active', load: 91, docs: 447, uptime: '9d 2h' },
-  { id: 'GPU-04', status: 'idle',   load: 12, docs: 205, uptime: '14d 6h' },
-  { id: 'GPU-05', status: 'active', load: 68, docs: 356, uptime: '3d 11h' },
-  { id: 'GPU-06', status: 'restarting', load: 0, docs: 298, uptime: '—' },
-  { id: 'GPU-07', status: 'active', load: 79, docs: 401, uptime: '14d 6h' },
-  { id: 'GPU-08', status: 'active', load: 55, docs: 312, uptime: '7d 19h' },
-  { id: 'GPU-09', status: 'active', load: 88, docs: 429, uptime: '14d 6h' },
-  { id: 'GPU-10', status: 'active', load: 62, docs: 340, uptime: '2d 4h' },
-  { id: 'GPU-11', status: 'idle',   load: 8,  docs: 190, uptime: '14d 6h' },
-  { id: 'GPU-12', status: 'active', load: 73, docs: 377, uptime: '5d 8h' },
+  { id: 'worker-01', name: 'ExtractNet-Node-A1', type: 'OCR & Layout Engine', status: 'Active', cpu: '54%', memory: '2.1 GB', processed: 1420, errors: 0 },
+  { id: 'worker-02', name: 'ExtractNet-Node-A2', type: 'OCR & Layout Engine', status: 'Active', cpu: '68%', memory: '2.4 GB', processed: 1390, errors: 1 },
+  { id: 'worker-03', name: 'SpatialVector-Node-01', type: 'Cadastral Polygon Vectorizer', status: 'Active', cpu: '78%', memory: '3.6 GB', processed: 820, errors: 0 },
+  { id: 'worker-04', name: 'SpatialVector-Node-02', type: 'Cadastral Polygon Vectorizer', status: 'Active', cpu: '72%', memory: '3.4 GB', processed: 790, errors: 0 },
+  { id: 'worker-05', name: 'HTR-Tamil-Node-01', type: 'Handwritten Tamil AI (1890-1980)', status: 'Active', cpu: '81%', memory: '4.1 GB', processed: 650, errors: 2 },
+  { id: 'worker-06', name: 'CrossCheck-Rules-01', type: 'Discrepancy Validator', status: 'Active', cpu: '42%', memory: '1.8 GB', processed: 2840, errors: 0 },
+  { id: 'worker-07', name: 'HashChain-Ledger-01', type: 'Blockchain Seal Validator', status: 'Active', cpu: '36%', memory: '1.5 GB', processed: 3120, errors: 0 },
+  { id: 'worker-08', name: 'PDF-Ingest-Worker-01', type: 'High-Res Ingestion Pipeline', status: 'Active', cpu: '49%', memory: '1.9 GB', processed: 1890, errors: 1 },
+  { id: 'worker-09', name: 'GIS-GeoServer-Worker', type: 'WMS/WFS Tile Renderer', status: 'Active', cpu: '61%', memory: '2.8 GB', processed: 940, errors: 0 }
 ];
-
-const HEALTH = {
-  cpu: 62, memory: 74, dbStorage: 68, apiTraffic: 1240,
-};
-
-const QUEUE = {
-  waiting: 500, processing: 12, failed: 4, avgWait: '2m 14s', throughput: '186 docs/min',
-};
-
-const DB_HEALTH = {
-  storageUsed: 68, storageTotal: '2 TB', connections: 340, maxConnections: 500,
-  replicationLag: '120ms', lastBackup: '2 hours ago', queryLatency: '38ms',
-};
 
 const ERROR_LOGS = [
-  { t: '10:44 AM', service: 'OCR Engine', level: 'error',   message: 'Timeout processing scan LR-1052 — exceeded 30s extraction window' },
-  { t: '10:31 AM', service: 'GIS Sync',   level: 'warning', message: 'State GIS API responded with degraded latency (620ms)' },
-  { t: '10:12 AM', service: 'Auth Service', level: 'error', message: 'Failed login attempts threshold exceeded for user U-205' },
-  { t: '9:58 AM',  service: 'Queue Worker', level: 'error', message: 'GPU-06 crashed mid-job — job requeued automatically' },
-  { t: '9:40 AM',  service: 'Database',   level: 'warning', message: 'Connection pool at 82% capacity during peak upload window' },
-  { t: '9:15 AM',  service: 'LRMS Sync',  level: 'error',   message: 'Batch sync to LRMS API rejected — schema mismatch on 3 records' },
+  { id: 'ERR-9841', timestamp: '10:24:18 AM', level: 'ERROR', service: 'ExtractNet-Node-A2', message: 'Tesseract OCR engine low contrast memory buffer timeout on doc_1044_scan.jpg', trace: 'TimeoutException at OCRPipeline.cpp:418' },
+  { id: 'ERR-9840', timestamp: '09:41:02 AM', level: 'WARN', service: 'GIS-GeoServer-Worker', message: 'Coordinate projection EPSG:3857 datum transformation variance > 0.05m', trace: 'TransformWarning at Proj4CRS.js:102' },
+  { id: 'ERR-9839', timestamp: '08:15:33 AM', level: 'ERROR', service: 'HTR-Tamil-Node-01', message: 'Corrupted TIFF header in 1921 settlement deed scan 153_1921.tiff', trace: 'ImageDecodeError at IngestWorker.py:88' },
+  { id: 'ERR-9838', timestamp: '07:50:11 AM', level: 'INFO', service: 'HashChain-Ledger-01', message: 'State block #88231 successfully verified across 4 validator nodes', trace: 'ConsensusReached at LedgerNode.go:204' }
 ];
-
-const DEAD_LETTER = [
-  { id: 'J-88410', doc: 'LR-1052', service: 'OCR Engine', error: 'Extraction timeout after 3 retries', attempts: 3, t: '10:44 AM' },
-  { id: 'J-88397', doc: 'LR-1048', service: 'GIS Sync', error: 'Invalid polygon geometry returned', attempts: 3, t: '10:20 AM' },
-  { id: 'J-88381', doc: 'LR-1041', service: 'Queue Worker', error: 'Worker GPU-06 terminated unexpectedly', attempts: 2, t: '9:58 AM' },
-  { id: 'J-88372', doc: 'LR-1037', service: 'LRMS Sync', error: 'Schema mismatch — khata_no field type', attempts: 3, t: '9:15 AM' },
-];
-
-const NAV = [
-  { group: 'Main', items: [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }] },
-  { group: 'Access', items: [
-    { id: 'users', label: 'User Management', icon: Users },
-    { id: 'roles', label: 'Roles & Permissions', icon: KeyRound },
-  ] },
-  { group: 'Infrastructure', items: [
-    { id: 'workers', label: 'AI Workers', icon: Cpu },
-    { id: 'queue', label: 'Queue Status', icon: ListOrdered },
-    { id: 'dbhealth', label: 'Database Health', icon: Database },
-  ] },
-  { group: 'Logs', items: [
-    { id: 'errors', label: 'Error Logs', icon: AlertOctagon },
-    { id: 'dlq', label: 'Dead Letter Queue', icon: Inbox },
-  ] },
-];
-
-/* =========================================================================
-   HELPERS
-   ========================================================================= */
-
-function gaugeTone(pct) {
-  if (pct >= 85) return 'rust';
-  if (pct >= 65) return 'amber';
-  return 'green';
-}
-
-const WORKER_META = {
-  active:     { label: 'Active',     tone: 'green' },
-  idle:       { label: 'Idle',       tone: 'ink' },
-  restarting: { label: 'Restarting', tone: 'rust' },
-};
-
-function WorkerBadge({ status }) {
-  const meta = WORKER_META[status] || WORKER_META.idle;
-  return <span className={`badge badge-${meta.tone}`}>{meta.label}</span>;
-}
-
-/* =========================================================================
-   ROOT COMPONENT
-   ========================================================================= */
 
 export default function SystemAdministratorDashboard({ userName = 'System Administrator', onLogout = () => {}, addToast = () => {} }) {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [resourceTimeframe, setResourceTimeframe] = useState('Last 24 hours');
+  const [resourceDropdownOpen, setResourceDropdownOpen] = useState(false);
+
+  // Modals & Sub-state
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [users, setUsers] = useState(INITIAL_USERS);
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Field & Verification Officer', district: 'Coimbatore' });
+  const [workerList, setWorkerList] = useState(AI_WORKERS);
+
   useEffect(() => {
-    if (document.getElementById('op-dash-fonts')) return;
+    if (document.getElementById('sys-dash-fonts')) return;
     const link = document.createElement('link');
-    link.id = 'op-dash-fonts';
+    link.id = 'sys-dash-fonts';
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap';
     document.head.appendChild(link);
   }, []);
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [users, setUsers] = useState(INITIAL_USERS);
-  const [workers, setWorkers] = useState(AI_WORKERS);
-  const [addUserOpen, setAddUserOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Field & Verification Officer' });
-  const [dlq, setDlq] = useState(DEAD_LETTER);
-  const [restartingAll, setRestartingAll] = useState(false);
-
-  const activeUsers = users.filter(u => u.status === 'active').length;
-  const failedJobs = dlq.length;
-  const activeWorkers = workers.filter(w => w.status === 'active').length;
-
-  function toggleUserStatus(id) {
-    setUsers(us => us.map(u => u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u));
-    const u = users.find(u => u.id === id);
-    addToast(`${u.name} ${u.status === 'active' ? 'deactivated' : 'activated'}.`, 'success');
-  }
-
-  function addUser(e) {
+  function handleAddUser(e) {
     e.preventDefault();
-    if (!newUser.name.trim() || !newUser.email.trim()) { addToast('Enter a name and email.'); return; }
-    const id = 'U-' + (200 + users.length + 1);
-    setUsers(us => [{ id, name: newUser.name, email: newUser.email, role: newUser.role, status: 'active', lastLogin: 'Never' }, ...us]);
-    addToast(`${newUser.name} added as ${newUser.role}.`, 'success');
-    setNewUser({ name: '', email: '', role: 'Field & Verification Officer' });
-    setAddUserOpen(false);
+    if (!newUser.name || !newUser.email) return;
+    const newEntry = {
+      id: `USR-${String(users.length + 1).padStart(2, '0')}`,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      status: 'Online',
+      lastActive: 'Just now',
+      district: newUser.district
+    };
+    setUsers([newEntry, ...users]);
+    setAddUserModalOpen(false);
+    setNewUser({ name: '', email: '', role: 'Field & Verification Officer', district: 'Coimbatore' });
+    addToast(`User ${newEntry.name} provisioned successfully`, 'success');
   }
 
-  function restartWorker(id) {
-    setWorkers(ws => ws.map(w => w.id === id ? { ...w, status: 'restarting', load: 0 } : w));
-    addToast(`${id} restarting…`);
+  function restartWorker(workerId) {
+    addToast(`Restarting ${workerId}...`, 'info');
     setTimeout(() => {
-      setWorkers(ws => ws.map(w => w.id === id ? { ...w, status: 'active', load: 20 + Math.floor(Math.random() * 40), uptime: '0m' } : w));
-      addToast(`${id} back online.`, 'success');
-    }, 1600);
+      setWorkerList(prev => prev.map(w => w.id === workerId ? { ...w, cpu: '12%', memory: '1.2 GB', errors: 0 } : w));
+      addToast(`${workerId} restarted and healthy`, 'success');
+    }, 1000);
   }
 
-  function restartAllIdle() {
-    const idleIds = workers.filter(w => w.status === 'idle').map(w => w.id);
-    if (idleIds.length === 0) { addToast('No idle workers to restart.'); return; }
-    setRestartingAll(true);
-    setWorkers(ws => ws.map(w => idleIds.includes(w.id) ? { ...w, status: 'restarting', load: 0 } : w));
+  function restartAllWorkers() {
+    addToast('Restarting all 9 AI pipeline worker nodes...', 'info');
     setTimeout(() => {
-      setWorkers(ws => ws.map(w => idleIds.includes(w.id) ? { ...w, status: 'active', load: 25 + Math.floor(Math.random() * 35), uptime: '0m' } : w));
-      setRestartingAll(false);
-      addToast(`${idleIds.length} worker(s) restarted.`, 'success');
-    }, 1600);
+      setWorkerList(prev => prev.map(w => ({ ...w, cpu: `${Math.floor(Math.random() * 25 + 20)}%`, errors: 0 })));
+      addToast('All AI Worker nodes successfully re-initialized', 'success');
+    }, 1200);
   }
-
-  function resolveDlqJob(id) {
-    setDlq(d => d.filter(j => j.id !== id));
-    addToast(`Job ${id} requeued for processing.`, 'success');
-  }
-
-  /* ---------------------------------------------------------------------
-     PAGE RENDERERS
-     --------------------------------------------------------------------- */
-
-  function renderDashboard() {
-    return (
-      <>
-        <PageHead title={`Welcome, ${userName} ⚙️`} sub="Server health, users, permissions, and AI pipeline infrastructure." />
-        <div className="kpi-grid">
-          <KPI label="Active Users" val={`${activeUsers} Online`} icon={Users} />
-          <KPI label="AI Pipeline Latency" val="1.2s avg / page" icon={Activity} />
-          <KPI label="Failed Jobs" val={failedJobs} icon={AlertOctagon} tone={failedJobs > 0 ? 'rust' : 'green'} onClick={() => setActiveTab('dlq')} />
-          <KPI label="System Uptime" val="99.99%" icon={ShieldCheck} tone="green" />
-        </div>
-
-        <div className="grid-2">
-          <div className="panel">
-            <div className="panel-head"><h3>SYSTEM HEALTH MATRIX</h3></div>
-            <div className="panel-body">
-              <div className="gauge-list">
-                <GaugeRow label="CPU Usage" value={HEALTH.cpu} unit="%" />
-                <GaugeRow label="Memory Usage" value={HEALTH.memory} unit="%" />
-                <GaugeRow label="Database Storage" value={HEALTH.dbStorage} unit="%" />
-                <div className="gauge-row">
-                  <span className="gauge-label">API Gateway Traffic</span>
-                  <span className="gauge-flat mono">{HEALTH.apiTraffic.toLocaleString('en-IN')} req/min</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-head"><h3>AI WORKER QUEUE</h3></div>
-            <div className="panel-body">
-              <div className="queue-stats">
-                <div className="qs-item"><b>{QUEUE.waiting}</b><span>Docs Waiting</span></div>
-                <div className="qs-item"><b>{activeWorkers}</b><span>Active GPU Workers</span></div>
-                <div className="qs-item"><b>{QUEUE.avgWait}</b><span>Avg Wait Time</span></div>
-              </div>
-              <div className="worker-strip">
-                {workers.map(w => (
-                  <div key={w.id} className={`worker-chip status-${w.status}`} title={`${w.id} — ${w.status}`}>
-                    {w.status === 'restarting' ? <Loader2 size={11} className="spin" /> : <Cpu size={11} />}
-                  </div>
-                ))}
-              </div>
-              <button className="btn btn-outline btn-block" style={{ marginTop: 14 }} onClick={() => setActiveTab('workers')}>
-                <Cpu size={15} /> Manage AI Workers
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel" style={{ marginTop: 16 }}>
-          <div className="panel-head"><h3>QUICK ACTIONS</h3></div>
-          <div className="panel-body quick-actions quick-actions-row">
-            <button className="qa-btn" onClick={() => setAddUserOpen(true)}><UserPlus size={17} /> Add / Manage User</button>
-            <button className="qa-btn" onClick={restartAllIdle}><RotateCcw size={17} /> Restart AI Worker</button>
-            <button className="qa-btn" onClick={() => setActiveTab('errors')}><AlertOctagon size={17} /> View Error Logs</button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderUsers() {
-    return (
-      <>
-        <PageHead title="User Management" sub="Every account with access to the platform."
-                  rightBtn={<button className="btn btn-primary" onClick={() => setAddUserOpen(true)}><UserPlus size={15} /> Add User</button>} />
-        <div className="panel">
-          <div className="panel-body">
-            <table>
-              <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th></th></tr></thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id}>
-                    <td><b>{u.name}</b><span className="int-sub mono">{u.id}</span></td>
-                    <td className="mono">{u.email}</td>
-                    <td>{u.role}</td>
-                    <td><span className={`badge ${u.status === 'active' ? 'badge-green' : 'badge-rust'}`}>{u.status === 'active' ? 'Active' : 'Inactive'}</span></td>
-                    <td className="mono">{u.lastLogin}</td>
-                    <td><button className="btn btn-ghost btn-sm" onClick={() => toggleUserStatus(u.id)}>{u.status === 'active' ? 'Deactivate' : 'Activate'}</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderRoles() {
-    return (
-      <>
-        <PageHead title="Roles & Permissions" sub="What each role is allowed to see and do across the platform." />
-        <div className="role-grid">
-          {ROLES.map(r => (
-            <div key={r.role} className="panel role-card">
-              <div className="panel-head"><h3>{r.role.toUpperCase()}</h3><span className="mono muted">{r.users.toLocaleString('en-IN')} users</span></div>
-              <div className="panel-body">
-                <ul className="perm-list">
-                  {r.perms.map((p, i) => <li key={i}><CheckCircle2 size={13} /> {p}</li>)}
-                </ul>
-              </div>
-            </div>
-          ))}
-        </div>
-      </>
-    );
-  }
-
-  function renderWorkers() {
-    return (
-      <>
-        <PageHead title="AI Workers" sub="GPU workers powering the document extraction pipeline."
-                  rightBtn={<button className="btn btn-primary" onClick={restartAllIdle} disabled={restartingAll}>
-                    {restartingAll ? <Loader2 size={15} className="spin" /> : <RotateCcw size={15} />} Restart Idle Workers
-                  </button>} />
-        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-          <KPI label="Active Workers" val={activeWorkers} icon={Cpu} tone="green" />
-          <KPI label="Idle Workers" val={workers.filter(w => w.status === 'idle').length} icon={Cpu} />
-          <KPI label="Avg Load" val={`${Math.round(workers.reduce((s, w) => s + w.load, 0) / workers.length)}%`} icon={Gauge} />
-        </div>
-        <div className="panel">
-          <div className="panel-body">
-            <table>
-              <thead><tr><th>Worker</th><th>Status</th><th>Load</th><th>Docs Processed</th><th>Uptime</th><th></th></tr></thead>
-              <tbody>
-                {workers.map(w => (
-                  <tr key={w.id}>
-                    <td className="mono"><b>{w.id}</b></td>
-                    <td><WorkerBadge status={w.status} /></td>
-                    <td>
-                      <div className="hb-track" style={{ maxWidth: 100, display: 'inline-block', marginRight: 8, verticalAlign: 'middle' }}>
-                        <div className={`hb-fill tone-${gaugeTone(w.load) === 'amber' ? 'ink' : gaugeTone(w.load)}`} style={{ width: `${w.load}%` }} />
-                      </div>
-                      <span className="mono">{w.load}%</span>
-                    </td>
-                    <td className="mono">{w.docs}</td>
-                    <td className="mono">{w.uptime}</td>
-                    <td>
-                      <button className="btn btn-ghost btn-sm" disabled={w.status === 'restarting'} onClick={() => restartWorker(w.id)}>
-                        {w.status === 'restarting' ? <Loader2 size={13} className="spin" /> : <RotateCcw size={13} />} Restart
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderQueue() {
-    return (
-      <>
-        <PageHead title="Queue Status" sub="Live view of the asynchronous document processing queue." />
-        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-          <KPI label="Docs Waiting" val={QUEUE.waiting} icon={Inbox} />
-          <KPI label="Currently Processing" val={QUEUE.processing} icon={Activity} />
-          <KPI label="Failed Jobs" val={QUEUE.failed} icon={AlertOctagon} tone="rust" onClick={() => setActiveTab('dlq')} />
-          <KPI label="Throughput" val={QUEUE.throughput} icon={Gauge} />
-        </div>
-        <div className="panel">
-          <div className="panel-head"><h3>QUEUE PIPELINE</h3></div>
-          <div className="panel-body">
-            <div className="stage-row">
-              <Stage n={QUEUE.waiting} label="Waiting" />
-              <div className="stage-arrow">→</div>
-              <Stage n={QUEUE.processing} label="Processing" />
-              <div className="stage-arrow">→</div>
-              <Stage n={activeWorkers} label="Active Workers" />
-              <div className="stage-arrow">→</div>
-              <Stage n={QUEUE.failed} label="Failed" />
-            </div>
-            <p className="muted" style={{ marginTop: 16 }}>Average wait time is currently <b className="mono">{QUEUE.avgWait}</b> at a throughput of <b className="mono">{QUEUE.throughput}</b>.</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderDbHealth() {
-    return (
-      <>
-        <PageHead title="Database Health" sub="Storage, connections, and replication status." />
-        <div className="grid-2">
-          <div className="panel">
-            <div className="panel-head"><h3>STORAGE & CONNECTIONS</h3></div>
-            <div className="panel-body">
-              <GaugeRow label="Storage Used" value={DB_HEALTH.storageUsed} unit="%" />
-              <div className="extract-row"><span className="k">Total Capacity</span><span className="v mono">{DB_HEALTH.storageTotal}</span></div>
-              <div className="extract-row"><span className="k">Active Connections</span><span className="v mono">{DB_HEALTH.connections} / {DB_HEALTH.maxConnections}</span></div>
-              <div className="extract-row"><span className="k">Query Latency</span><span className="v mono">{DB_HEALTH.queryLatency}</span></div>
-            </div>
-          </div>
-          <div className="panel">
-            <div className="panel-head"><h3>REPLICATION & BACKUPS</h3></div>
-            <div className="panel-body">
-              <div className="extract-row"><span className="k">Replication Lag</span><span className="v mono">{DB_HEALTH.replicationLag}</span></div>
-              <div className="extract-row"><span className="k">Last Backup</span><span className="v mono">{DB_HEALTH.lastBackup}</span></div>
-              <div className="extract-row"><span className="k">Backup Status</span><span className="status-chip">Healthy</span></div>
-              <button className="btn btn-outline btn-block" style={{ marginTop: 16 }}
-                      onClick={() => addToast('Manual backup started.', 'success')}>
-                <Database size={15} /> Trigger Manual Backup
-              </button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderErrors() {
-    return (
-      <>
-        <PageHead title="Error Logs" sub="System-level errors and warnings across every service." />
-        <div className="panel">
-          <div className="panel-body" style={{ padding: 0 }}>
-            <div className="feed-list">
-              {ERROR_LOGS.map((e, i) => (
-                <div key={i} className="feed-row">
-                  <span className="feed-time mono">{e.t}</span>
-                  <div className="feed-body">
-                    <span className={`feed-role tone-${e.level === 'error' ? 'rust' : 'ink'}`}>{e.level === 'error' ? 'ERROR' : 'WARNING'}</span>
-                    <span> <b>{e.service}</b> — {e.message}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderDlq() {
-    if (dlq.length === 0) {
-      return (
-        <>
-          <PageHead title="Dead Letter Queue" sub="Jobs that failed after all automatic retries." />
-          <div className="panel"><div className="panel-body">
-            <EmptyState icon={CheckCircle2} title="Dead letter queue is empty" sub="No failed jobs are waiting to be resolved." />
-          </div></div>
-        </>
-      );
-    }
-    return (
-      <>
-        <PageHead title="Dead Letter Queue" sub="Jobs that failed after all automatic retries." />
-        <div className="panel">
-          <div className="panel-body">
-            <table>
-              <thead><tr><th>Job</th><th>Document</th><th>Service</th><th>Error</th><th>Attempts</th><th>Failed At</th><th></th></tr></thead>
-              <tbody>
-                {dlq.map(j => (
-                  <tr key={j.id}>
-                    <td className="mono"><b>{j.id}</b></td>
-                    <td className="mono">{j.doc}</td>
-                    <td>{j.service}</td>
-                    <td className="reason-cell">{j.error}</td>
-                    <td className="mono">{j.attempts}</td>
-                    <td className="mono">{j.t}</td>
-                    <td><button className="btn btn-ghost btn-sm" onClick={() => resolveDlqJob(j.id)}><RotateCcw size={13} /> Requeue</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  function renderSettings() {
-    return (
-      <>
-        <PageHead title="Settings" sub="Your account preferences." />
-        <div className="panel"><div className="panel-body">
-          <div className="field"><label>Name</label><input type="text" defaultValue={userName} /></div>
-          <div className="field"><label>Role</label><input type="text" defaultValue="System Administrator" disabled /></div>
-          <button className="btn btn-primary" onClick={() => addToast('Settings saved.', 'success')}>Save Changes</button>
-        </div></div>
-      </>
-    );
-  }
-
-  function renderContent() {
-    switch (activeTab) {
-      case 'dashboard': return renderDashboard();
-      case 'users': return renderUsers();
-      case 'roles': return renderRoles();
-      case 'workers': return renderWorkers();
-      case 'queue': return renderQueue();
-      case 'dbhealth': return renderDbHealth();
-      case 'errors': return renderErrors();
-      case 'dlq': return renderDlq();
-      case 'settings': return renderSettings();
-      default: return null;
-    }
-  }
-
-  /* ---------------------------------------------------------------------
-     LAYOUT
-     --------------------------------------------------------------------- */
 
   return (
-    <div className="op-dash">
-      <style>{CSS}</style>
+    <div className="sys-root">
+      <style>{SYS_ADMIN_STYLES}</style>
 
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} no-print`}>
-        <div className="sb-top">
-          <div className="brand">
-            <div className="brand-mark">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M4 20V10L12 4L20 10V20" stroke="white" strokeWidth="1.8" strokeLinejoin="round" />
-                <path d="M9 20V14H15V20" stroke="white" strokeWidth="1.8" />
-              </svg>
+      {/* =====================================================================
+          SIDEBAR NAVIGATION (Darker Mint Green #c5ebd7 -> #b2dfc8)
+          ===================================================================== */}
+      <aside className="sys-sidebar">
+        <div className="sys-sidebar-top">
+          {/* Brand Logo */}
+          <div className="sys-brand" onClick={() => setActiveTab('dashboard')}>
+            <div className="sys-brand-logo-wrap">
+              <img src={logoImg} alt="NilOra" className="sys-logo-img" />
             </div>
-            {!collapsed && <span className="brand-name">Land<em>Intel</em></span>}
+            <div className="sys-brand-text-col">
+              <span className="sys-brand-title">Nilora</span>
+              <span className="sys-brand-sub">LAND RECORDS AT ORIGIN</span>
+            </div>
           </div>
-          <button className="sb-toggle" onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-            {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
-          </button>
+
+          {/* Nav Items */}
+          <nav className="sys-nav">
+            <button
+              className={`sys-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dashboard')}
+            >
+              <LayoutDashboard size={18} />
+              <span>Dashboard</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('users')}
+            >
+              <Users size={18} />
+              <span>User Management</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'roles' ? 'active' : ''}`}
+              onClick={() => setActiveTab('roles')}
+            >
+              <Shield size={18} />
+              <span>Roles &amp; Permissions</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'workers' ? 'active' : ''}`}
+              onClick={() => setActiveTab('workers')}
+            >
+              <Cpu size={18} />
+              <span>AI Workers</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'queue' ? 'active' : ''}`}
+              onClick={() => setActiveTab('queue')}
+            >
+              <ListOrdered size={18} />
+              <span>Queue Status</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'db' ? 'active' : ''}`}
+              onClick={() => setActiveTab('db')}
+            >
+              <Database size={18} />
+              <span>Database Health</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'logs' ? 'active' : ''}`}
+              onClick={() => setActiveTab('logs')}
+            >
+              <AlertCircle size={18} />
+              <span>Error Logs</span>
+            </button>
+            <button
+              className={`sys-nav-item ${activeTab === 'dlq' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dlq')}
+            >
+              <Inbox size={18} />
+              <span>Dead Letter Queue</span>
+            </button>
+          </nav>
         </div>
 
-        <nav className="sb-nav">
-          {NAV.map(g => (
-            <div key={g.group} className="sb-group">
-              {!collapsed && <div className="sb-group-label">{g.group}</div>}
-              {g.items.map(item => {
-                const Icon = item.icon;
-                const active = activeTab === item.id;
-                return (
-                  <button key={item.id} className={`sb-item ${active ? 'active' : ''}`} onClick={() => setActiveTab(item.id)} title={collapsed ? item.label : undefined}>
-                    <Icon size={17} />
-                    {!collapsed && <span>{item.label}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        <div className="sb-bottom">
-          <button className={`sb-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} title={collapsed ? 'Settings' : undefined}>
-            <SettingsIcon size={17} />{!collapsed && <span>Settings</span>}
+        {/* Bottom Nav */}
+        <div className="sys-sidebar-bottom">
+          <button
+            className={`sys-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <SettingsIcon size={18} />
+            <span>Settings</span>
           </button>
-          <button className="sb-item" onClick={onLogout} title={collapsed ? 'Logout' : undefined}>
-            <LogOut size={17} />{!collapsed && <span>Logout</span>}
+          <button className="sys-nav-item" onClick={onLogout}>
+            <LogOut size={18} />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      <div className="main">
-        <header className="topbar no-print">
-          <div className="tb-left">
-            <span className="tb-title">LandIntel</span>
-            <span className="tb-chip">System Administrator</span>
+      {/* =====================================================================
+          MAIN CONTENT WRAPPER
+          ===================================================================== */}
+      <div className="sys-main-wrapper">
+        {/* Top Header */}
+        <header className="sys-header">
+          <div className="sys-header-left">
+            <span className="sys-live-dot" />
+            <span className="sys-role-title">System Administrator</span>
           </div>
-          <div className="tb-right">
-            <div className="tb-search"><Search size={14} /><input placeholder="Search users, jobs, logs…" /></div>
-            <div className="tb-user"><MapPin size={13} /> {userName}</div>
+
+          <div className="sys-header-right">
+            {/* Search Pill */}
+            <div className="sys-search-pill">
+              <Search size={16} className="text-muted" />
+              <input
+                type="text"
+                placeholder="Search users, jobs, logs..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Notification Bell */}
+            <div className="relative">
+              <button className="sys-icon-btn" onClick={() => setNotifOpen(!notifOpen)}>
+                <Bell size={18} />
+                <span className="sys-bell-dot" />
+              </button>
+              {notifOpen && (
+                <div className="sys-dropdown sys-notif-dd">
+                  <div className="sys-dd-head">
+                    <b>System Alerts</b>
+                    <span className="sys-pill-sm">4 Alerts</span>
+                  </div>
+                  <div className="sys-notif-item">
+                    <div className="notif-t">Dead Letter Queue Alert</div>
+                    <div className="notif-s">4 jobs failed after 3 retries in worker pool</div>
+                    <div className="notif-tm">12 mins ago</div>
+                  </div>
+                  <div className="sys-notif-item">
+                    <div className="notif-t">Memory Utilization 74%</div>
+                    <div className="notif-s">Node pool auto-scaling triggered</div>
+                    <div className="notif-tm">25 mins ago</div>
+                  </div>
+                  <div className="sys-notif-item">
+                    <div className="notif-t">Daily Database Backup</div>
+                    <div className="notif-s">Snapshot created successfully (14.2 GB)</div>
+                    <div className="notif-tm">2 hours ago</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Avatar Pill */}
+            <div className="relative">
+              <button className="sys-user-pill" onClick={() => setProfileOpen(!profileOpen)}>
+                <div className="sys-avatar">S</div>
+                <span className="sys-user-name">System Administrator</span>
+                <ChevronDown size={14} className="text-muted" />
+              </button>
+              {profileOpen && (
+                <div className="sys-dropdown sys-profile-dd">
+                  <div className="sys-dd-user">
+                    <b>System Administrator</b>
+                    <span>sysadmin@nilora.gov.in</span>
+                  </div>
+                  <div className="sys-dd-divider" />
+                  <button className="sys-dd-item" onClick={() => { setActiveTab('settings'); setProfileOpen(false); }}>
+                    <SettingsIcon size={14} /> System Settings
+                  </button>
+                  <button className="sys-dd-item danger" onClick={onLogout}>
+                    <LogOut size={14} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
-        <div className="page">{renderContent()}</div>
-      </div>
 
-      {addUserOpen && (
-        <div className="modal-overlay" onClick={() => setAddUserOpen(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-head">
-              <div><h3>Add User</h3><p>Grant a new team member access to the platform.</p></div>
-              <button className="modal-close" onClick={() => setAddUserOpen(false)}><X size={16} /></button>
+        {/* ===================================================================
+            STAGE VIEW: DASHBOARD TAB
+            =================================================================== */}
+        {activeTab === 'dashboard' && (
+          <div className="sys-content-stage">
+            {/* Hero Row */}
+            <div className="sys-hero-row">
+              <div className="sys-hero-text">
+                <div className="sys-title-wrap">
+                  <h1 className="sys-title">Welcome Back</h1>
+                  <span className="sys-gear-icon">⚙️</span>
+                </div>
+                <p className="sys-subtitle">Monitor and manage system resources, users, and AI pipeline.</p>
+              </div>
+              <div className="sys-date-card">
+                <div className="sys-date-ic">
+                  <Clock size={20} className="text-emerald" />
+                </div>
+                <div className="sys-date-text">
+                  <span className="sys-date-num">Wed, 03 Sep 2026</span>
+                  <span className="sys-day">Wednesday</span>
+                </div>
+              </div>
             </div>
-            <div className="modal-body">
-              <form onSubmit={addUser}>
-                <div className="field"><label>Full Name</label>
-                  <input type="text" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="e.g. Priya Venkat" />
+
+            {/* 4 Top KPI Cards Grid */}
+            <div className="sys-kpi-grid">
+              {/* Card 1: Active Users */}
+              <div className="sys-kpi-card" onClick={() => setActiveTab('users')}>
+                <div className="kpi-icon-box bg-mint">
+                  <Users size={20} className="text-emerald" />
                 </div>
-                <div className="field"><label>Email</label>
-                  <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="name@tn.gov.in" />
+                <div className="kpi-body">
+                  <div className="kpi-val">6</div>
+                  <div className="kpi-lbl">Active Users</div>
+                  <div className="kpi-status-row">
+                    <span className="dot dot-green" />
+                    <span className="status-txt">Online</span>
+                  </div>
                 </div>
-                <div className="field"><label>Role</label>
-                  <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
-                    {ROLES.filter(r => r.role !== 'Citizen').map(r => <option key={r.role}>{r.role}</option>)}
+              </div>
+
+              {/* Card 2: AI Latency */}
+              <div className="sys-kpi-card" onClick={() => setActiveTab('workers')}>
+                <div className="kpi-icon-box bg-mint">
+                  <Activity size={20} className="text-emerald" />
+                </div>
+                <div className="kpi-body">
+                  <div className="kpi-val">1.2s</div>
+                  <div className="kpi-lbl">AI Latency</div>
+                  <div className="kpi-status-row">
+                    <span className="dot dot-green" />
+                    <span className="status-txt">Normal</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Failed Jobs */}
+              <div className="sys-kpi-card" onClick={() => setActiveTab('dlq')}>
+                <div className="kpi-icon-box bg-peach">
+                  <AlertTriangle size={20} className="text-red" />
+                </div>
+                <div className="kpi-body">
+                  <div className="kpi-val">4</div>
+                  <div className="kpi-lbl">Failed Jobs</div>
+                  <div className="kpi-status-row">
+                    <span className="dot dot-red" />
+                    <span className="status-txt text-red">Requires attention</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: System Uptime */}
+              <div className="sys-kpi-card">
+                <div className="kpi-icon-box bg-mint">
+                  <ShieldCheck size={20} className="text-emerald" />
+                </div>
+                <div className="kpi-body">
+                  <div className="kpi-val">99.99%</div>
+                  <div className="kpi-lbl">System Uptime</div>
+                  <div className="kpi-status-row">
+                    <span className="dot dot-green" />
+                    <span className="status-txt">Healthy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Row: Resource Usage & AI Worker Queue */}
+            <div className="sys-middle-grid">
+              {/* Left Card: Resource Usage */}
+              <div className="sys-card">
+                <div className="sys-card-head">
+                  <div className="sys-card-head-left">
+                    <Database size={18} className="text-emerald" />
+                    <h3 className="sys-card-title">Resource Usage</h3>
+                  </div>
+                  <div className="sys-timeframe-dropdown">
+                    <button
+                      className="sys-timeframe-btn"
+                      onClick={() => setResourceDropdownOpen(!resourceDropdownOpen)}
+                    >
+                      <Clock size={14} />
+                      <span>{resourceTimeframe}</span>
+                      <ChevronDown size={14} />
+                    </button>
+                    {resourceDropdownOpen && (
+                      <div className="sys-tf-menu">
+                        {['Last 1 hour', 'Last 6 hours', 'Last 24 hours', 'Last 7 days'].map(tf => (
+                          <button
+                            key={tf}
+                            className="sys-tf-item"
+                            onClick={() => { setResourceTimeframe(tf); setResourceDropdownOpen(false); }}
+                          >
+                            {tf}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4 Circular Gauge Rings */}
+                <div className="sys-gauges-grid">
+                  {/* Gauge 1: CPU */}
+                  <div className="gauge-col">
+                    <div className="gauge-wrap">
+                      <svg viewBox="0 0 36 36" className="gauge-svg">
+                        <path className="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="gauge-val" strokeDasharray="62, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <div className="gauge-pct">62%</div>
+                    </div>
+                    <div className="gauge-meta">
+                      <Cpu size={16} className="gauge-ic" />
+                      <span className="gauge-name">CPU</span>
+                    </div>
+                  </div>
+
+                  {/* Gauge 2: Memory */}
+                  <div className="gauge-col">
+                    <div className="gauge-wrap">
+                      <svg viewBox="0 0 36 36" className="gauge-svg">
+                        <path className="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="gauge-val" strokeDasharray="74, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <div className="gauge-pct">74%</div>
+                    </div>
+                    <div className="gauge-meta">
+                      <Database size={16} className="gauge-ic" />
+                      <span className="gauge-name">Memory</span>
+                    </div>
+                  </div>
+
+                  {/* Gauge 3: Database */}
+                  <div className="gauge-col">
+                    <div className="gauge-wrap">
+                      <svg viewBox="0 0 36 36" className="gauge-svg">
+                        <path className="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="gauge-val" strokeDasharray="68, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <div className="gauge-pct">68%</div>
+                    </div>
+                    <div className="gauge-meta">
+                      <Cloud size={16} className="gauge-ic" />
+                      <span className="gauge-name">Database</span>
+                    </div>
+                  </div>
+
+                  {/* Gauge 4: API Gateway */}
+                  <div className="gauge-col">
+                    <div className="gauge-wrap">
+                      <svg viewBox="0 0 36 36" className="gauge-svg">
+                        <path className="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="gauge-val" strokeDasharray="38, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <div className="gauge-pct">38%</div>
+                    </div>
+                    <div className="gauge-meta">
+                      <Share2 size={16} className="gauge-ic" />
+                      <span className="gauge-name">API Gateway</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Card: AI Worker Queue */}
+              <div className="sys-card">
+                <div className="sys-card-head">
+                  <div className="sys-card-head-left">
+                    <Cpu size={18} className="text-emerald" />
+                    <h3 className="sys-card-title">AI Worker Queue</h3>
+                  </div>
+                </div>
+
+                {/* 3 Metric Badges */}
+                <div className="sys-queue-metrics">
+                  <div className="q-metric-box">
+                    <div className="q-num">500</div>
+                    <div className="q-lbl">Docs Waiting</div>
+                  </div>
+                  <div className="q-metric-box">
+                    <div className="q-num">9</div>
+                    <div className="q-lbl">Active Workers</div>
+                  </div>
+                  <div className="q-metric-box">
+                    <div className="q-num">2m 14s</div>
+                    <div className="q-lbl">Avg Wait Time</div>
+                  </div>
+                </div>
+
+                {/* Wave Frequency Bar Chart (Green gradient bars) */}
+                <div className="sys-wave-bars">
+                  {[30, 45, 55, 70, 85, 95, 75, 88, 92, 80, 84, 76, 78, 70, 60, 45, 35, 25].map((h, i) => (
+                    <div key={i} className="wave-bar-col">
+                      <div
+                        className="wave-bar-fill"
+                        style={{
+                          height: `${h}%`,
+                          background: i < 5 ? '#0c5838' : i < 11 ? '#10b981' : '#a7f3d0'
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Section: Quick Actions */}
+            <div className="sys-card">
+              <div className="sys-card-head">
+                <div className="sys-card-head-left">
+                  <span className="text-emerald font-bold">⚡</span>
+                  <h3 className="sys-card-title">Quick Actions</h3>
+                </div>
+              </div>
+
+              <div className="sys-quick-grid">
+                <button className="sys-quick-btn" onClick={() => setAddUserModalOpen(true)}>
+                  <UserPlus size={18} className="text-emerald" />
+                  <span>Add / Manage User</span>
+                  <ChevronRight size={16} className="q-arrow" />
+                </button>
+                <button className="sys-quick-btn" onClick={restartAllWorkers}>
+                  <RefreshCw size={18} className="text-emerald" />
+                  <span>Restart AI Worker</span>
+                  <ChevronRight size={16} className="q-arrow" />
+                </button>
+                <button className="sys-quick-btn" onClick={() => setActiveTab('logs')}>
+                  <AlertCircle size={18} className="text-emerald" />
+                  <span>View Error Logs</span>
+                  <ChevronRight size={16} className="q-arrow" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: USER MANAGEMENT
+            =================================================================== */}
+        {activeTab === 'users' && (
+          <div className="sys-content-stage">
+            <div className="sys-card">
+              <div className="sys-card-head">
+                <div>
+                  <h2 className="sys-card-title">System Users &amp; Access Controls</h2>
+                  <p className="sys-card-sub">Active sessions, provisioned roles, and district assignments.</p>
+                </div>
+                <button className="sys-btn-primary" onClick={() => setAddUserModalOpen(true)}>
+                  <UserPlus size={16} /> + Add New User
+                </button>
+              </div>
+
+              <div className="sys-table-wrap">
+                <table className="sys-table">
+                  <thead>
+                    <tr>
+                      <th>User ID</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>System Role</th>
+                      <th>District Assigned</th>
+                      <th>Status</th>
+                      <th>Last Active</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u.id}>
+                        <td className="mono font-bold text-emerald">{u.id}</td>
+                        <td><b>{u.name}</b></td>
+                        <td className="mono">{u.email}</td>
+                        <td><span className="role-tag">{u.role}</span></td>
+                        <td>{u.district}</td>
+                        <td>
+                          <span className={`status-pill ${u.status === 'Online' ? 'online' : 'offline'}`}>
+                            <span className="dot" /> {u.status}
+                          </span>
+                        </td>
+                        <td className="mono text-muted">{u.lastActive}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: AI WORKERS
+            =================================================================== */}
+        {activeTab === 'workers' && (
+          <div className="sys-content-stage">
+            <div className="sys-card">
+              <div className="sys-card-head">
+                <div>
+                  <h2 className="sys-card-title">AI Pipeline Compute Pool (9 Worker Nodes)</h2>
+                  <p className="sys-card-sub">Real-time status, CPU/Memory telemetry, and node restart triggers.</p>
+                </div>
+                <button className="sys-btn-primary" onClick={restartAllWorkers}>
+                  <RefreshCw size={15} /> Restart All Workers
+                </button>
+              </div>
+
+              <div className="sys-workers-grid">
+                {workerList.map(w => (
+                  <div key={w.id} className="worker-card">
+                    <div className="w-head">
+                      <div>
+                        <b className="w-name">{w.name}</b>
+                        <span className="w-type">{w.type}</span>
+                      </div>
+                      <span className="w-badge">Active</span>
+                    </div>
+                    <div className="w-stats-row">
+                      <div><span className="lbl">CPU Load</span><b className="mono">{w.cpu}</b></div>
+                      <div><span className="lbl">Memory</span><b className="mono">{w.memory}</b></div>
+                      <div><span className="lbl">Processed</span><b className="mono">{w.processed} docs</b></div>
+                    </div>
+                    <button className="w-restart-btn" onClick={() => restartWorker(w.id)}>
+                      <RotateCcw size={13} /> Restart Node
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: ERROR LOGS & DLQ
+            =================================================================== */}
+        {(activeTab === 'logs' || activeTab === 'dlq' || activeTab === 'queue' || activeTab === 'db' || activeTab === 'roles') && (
+          <div className="sys-content-stage">
+            <div className="sys-card">
+              <div className="sys-card-head">
+                <div>
+                  <h2 className="sys-card-title">System Error Logs &amp; Telemetry Stream</h2>
+                  <p className="sys-card-sub">Real-time exception tracking across backend workers and database replicas.</p>
+                </div>
+                <button className="sys-btn-primary" onClick={() => addToast('Logs exported to logfile.txt', 'success')}>
+                  <Download size={15} /> Export Logs
+                </button>
+              </div>
+
+              <div className="sys-logs-list">
+                {ERROR_LOGS.map(err => (
+                  <div key={err.id} className="sys-log-row">
+                    <div className="log-top">
+                      <span className={`log-badge ${err.level.toLowerCase()}`}>{err.level}</span>
+                      <span className="log-srv font-bold">{err.service}</span>
+                      <span className="log-time mono">{err.timestamp}</span>
+                    </div>
+                    <div className="log-msg">{err.message}</div>
+                    <div className="log-trace mono">{err.trace}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SUB-VIEW: SETTINGS
+            =================================================================== */}
+        {activeTab === 'settings' && (
+          <div className="sys-content-stage">
+            <div className="sys-card">
+              <div className="sys-card-head">
+                <h2 className="sys-card-title">System Administrator Preferences</h2>
+              </div>
+              <form className="sys-form" onSubmit={e => { e.preventDefault(); addToast('Settings saved successfully', 'success'); }}>
+                <div className="form-group">
+                  <label>Administrator Name</label>
+                  <input type="text" defaultValue={userName} />
+                </div>
+                <div className="form-group">
+                  <label>Alert Email Webhook</label>
+                  <input type="email" defaultValue="sysadmin@nilora.gov.in" />
+                </div>
+                <div className="form-group">
+                  <label>Auto-Scaling Worker Ceiling</label>
+                  <select defaultValue="12">
+                    <option value="9">9 Nodes (Standard)</option>
+                    <option value="12">12 Nodes (Burst Capacity)</option>
+                    <option value="18">18 Nodes (Peak Digitization Load)</option>
                   </select>
                 </div>
-                <button type="submit" className="btn btn-primary btn-block"><UserPlus size={15} /> Add User</button>
+                <button type="submit" className="sys-btn-primary">Save Changes</button>
               </form>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* =====================================================================
+          MODAL: ADD / MANAGE USER
+          ===================================================================== */}
+      {addUserModalOpen && (
+        <div className="sys-modal-overlay" onClick={() => setAddUserModalOpen(false)}>
+          <div className="sys-modal-dialog" onClick={e => e.stopPropagation()}>
+            <div className="sys-modal-head">
+              <div>
+                <span className="sys-modal-tag">ACCESS MANAGEMENT</span>
+                <h3 className="sys-modal-title">Provision New User Account</h3>
+              </div>
+              <button className="sys-modal-close" onClick={() => setAddUserModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleAddUser}>
+              <div className="sys-modal-body">
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. S. Subramaniam"
+                    value={newUser.name}
+                    onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Official Email</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. subramaniam.s@tn.gov.in"
+                    value={newUser.email}
+                    onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>System Role</label>
+                  <select
+                    value={newUser.role}
+                    onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                  >
+                    <option value="District Administrator">District Administrator</option>
+                    <option value="Field & Verification Officer">Field &amp; Verification Officer</option>
+                    <option value="Auditor">Auditor</option>
+                    <option value="Registrar">Registrar</option>
+                    <option value="State Nodal Officer">State Nodal Officer</option>
+                    <option value="Tahsildar">Tahsildar</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Revenue District</label>
+                  <select
+                    value={newUser.district}
+                    onChange={e => setNewUser({ ...newUser, district: e.target.value })}
+                  >
+                    <option value="Coimbatore">Coimbatore</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Tiruppur">Tiruppur</option>
+                    <option value="Salem">Salem</option>
+                    <option value="Erode">Erode</option>
+                    <option value="State HQ">State HQ (All Districts)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="sys-modal-footer">
+                <button type="button" className="sys-btn-secondary" onClick={() => setAddUserModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="sys-btn-primary">
+                  <UserPlus size={15} /> Create User
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -586,224 +776,1008 @@ export default function SystemAdministratorDashboard({ userName = 'System Admini
 }
 
 /* =========================================================================
-   SMALL SHARED PIECES
+   EMBEDDED STYLES (Matching sysadmin.png)
    ========================================================================= */
 
-function PageHead({ title, sub, rightBtn }) {
-  return (
-    <div className="page-head">
-      <div><h2>{title}</h2><p>{sub}</p></div>
-      {rightBtn}
-    </div>
-  );
+const SYS_ADMIN_STYLES = `
+.sys-root {
+  display: flex;
+  min-height: 100vh;
+  background: #f4fbf7;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0c281a;
+  overflow-x: hidden;
 }
 
-function KPI({ label, val, icon: Icon, tone = 'ink', onClick }) {
-  return (
-    <div className={`kpi ${onClick ? 'kpi-clickable' : ''}`} onClick={onClick}>
-      <div className={`kpi-ic tone-${tone}`}><Icon size={16} /></div>
-      <div className="kpi-val">{val}</div>
-      <div className="kpi-label">{label}</div>
-    </div>
-  );
+.sys-root * {
+  box-sizing: border-box;
 }
 
-function GaugeRow({ label, value, unit }) {
-  const tone = gaugeTone(value);
-  return (
-    <div className="gauge-row">
-      <span className="gauge-label">{label}</span>
-      <div className="hb-track"><div className={`hb-fill tone-${tone === 'amber' ? 'ink' : tone}`} style={{ width: `${value}%` }} /></div>
-      <span className="mono gauge-val">{value}{unit}</span>
-    </div>
-  );
+/* Sidebar (Darker Mint Green #c5ebd7 -> #b2dfc8) */
+.sys-sidebar {
+  width: 236px;
+  background: #c5ebd7;
+  background: linear-gradient(180deg, #c5ebd7 0%, #b2dfc8 100%);
+  border-right: 1.5px solid #7bc69e;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px 14px 24px;
+  flex: none;
+  z-index: 20;
+  box-shadow: 4px 0 16px rgba(5, 150, 105, 0.08);
 }
 
-function Stage({ n, label }) { return <div className="stage"><b>{n}</b><span>{label}</span></div>; }
-
-function EmptyState({ icon: Icon, title, sub }) {
-  return <div className="empty-state"><Icon size={28} /><b>{title}</b><span>{sub}</span></div>;
+.sys-sidebar-top {
+  display: flex;
+  flex-direction: column;
 }
 
-/* =========================================================================
-   CSS — same design tokens as the Operator dashboard, extended for gauges,
-   worker chips, role cards, and system-health widgets
-   ========================================================================= */
-
-const CSS = `
-:root{
-  --ink:#1B2A41; --ink-soft:#3B4A63; --ink-faint:#7C879B;
-  --paper:#F6F5F0; --paper-raised:#FFFFFF; --line:#DCD9CE; --line-strong:#C7C3B5;
-  --rust:#C1502E; --rust-soft:#F4E3DC;
-  --green:#2F4A3D; --green-soft:#E4EAE3;
-  --navy-soft:#E2E7EF;
+.sys-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 24px;
+  cursor: pointer;
+  user-select: none;
 }
-.op-dash{ display:flex; min-height:100vh; background:var(--paper); color:var(--ink);
-  font-family:'IBM Plex Sans', system-ui, sans-serif; font-size:14px; line-height:1.5; }
-.op-dash *{ box-sizing:border-box; }
-.op-dash h1,.op-dash h2,.op-dash h3,.op-dash h4{ font-family:'Source Serif 4', Georgia, serif; margin:0; color:var(--ink); }
-.op-dash .mono{ font-family:'IBM Plex Mono', monospace; }
-.op-dash button{ font-family:inherit; cursor:pointer; }
-.op-dash input,.op-dash select{ font-family:inherit; }
-.spin{ animation:spin 1s linear infinite; }
-@keyframes spin{ to{ transform:rotate(360deg); } }
 
-/* Sidebar */
-.sidebar{ width:240px; background:var(--ink); color:#C9D2DE; display:flex; flex-direction:column; flex:none; transition:width .18s ease; }
-.sidebar.collapsed{ width:72px; }
-.sb-top{ display:flex; align-items:center; justify-content:space-between; padding:18px 16px; border-bottom:1px solid rgba(255,255,255,0.1); }
-.brand{ display:flex; align-items:center; gap:10px; overflow:hidden; }
-.brand-mark{ width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; flex:none; }
-.brand-name{ font-family:'Source Serif 4', serif; font-size:16px; font-weight:600; color:#fff; white-space:nowrap; }
-.brand-name em{ font-style:normal; color:var(--rust); }
-.sb-toggle{ background:transparent; border:1px solid rgba(255,255,255,0.15); color:#C9D2DE; border-radius:4px; width:26px; height:26px; display:flex; align-items:center; justify-content:center; flex:none; }
-.sb-toggle:hover{ background:rgba(255,255,255,0.08); }
-.sb-nav{ flex:1; overflow-y:auto; padding:14px 10px; }
-.sb-group{ margin-bottom:16px; }
-.sb-group-label{ font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#7C879B; padding:0 10px; margin-bottom:6px; }
-.sb-item{ display:flex; align-items:center; gap:11px; width:100%; padding:9px 10px; border:none; background:transparent; color:#C9D2DE; border-radius:4px; font-size:13.5px; font-weight:500; text-align:left; white-space:nowrap; overflow:hidden; }
-.sb-item span{ overflow:hidden; text-overflow:ellipsis; }
-.sb-item:hover{ background:rgba(255,255,255,0.06); color:#fff; }
-.sb-item.active{ background:rgba(193,80,46,0.18); color:#fff; box-shadow:inset 2px 0 0 var(--rust); }
-.sb-bottom{ padding:12px 10px 16px; border-top:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; gap:2px; }
+.sys-brand-logo-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1.5px solid #7bc69e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.15);
+}
 
-/* Main / topbar */
-.main{ flex:1; display:flex; flex-direction:column; min-width:0; }
-.topbar{ height:60px; background:var(--paper-raised); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 26px; flex:none; }
-.tb-left{ display:flex; align-items:center; gap:12px; }
-.tb-title{ font-family:'Source Serif 4', serif; font-weight:600; font-size:16px; }
-.tb-chip{ font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; background:var(--rust-soft); color:var(--rust); padding:3px 9px; border-radius:2px; }
-.tb-right{ display:flex; align-items:center; gap:18px; }
-.tb-search{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line); border-radius:4px; padding:7px 12px; color:var(--ink-faint); }
-.tb-search input{ border:none; background:transparent; outline:none; font-size:13px; width:200px; color:var(--ink); }
-.tb-user{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-soft); font-weight:500; }
+.sys-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
-.page{ padding:30px 32px 60px; overflow-y:auto; }
-.page-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; }
-.page-head h2{ font-size:24px; font-weight:600; }
-.page-head p{ margin:6px 0 0; color:var(--ink-soft); font-size:13.5px; }
+.sys-brand-text-col {
+  display: flex;
+  flex-direction: column;
+}
 
-/* KPI */
-.kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-.kpi{ background:var(--paper-raised); border:1px solid var(--line); padding:18px; position:relative; }
-.kpi-clickable{ cursor:pointer; }
-.kpi-clickable:hover{ border-color:var(--rust); }
-.kpi-ic{ width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
-.tone-ink{ background:var(--navy-soft); color:var(--ink); }
-.tone-rust{ background:var(--rust-soft); color:var(--rust); }
-.tone-green{ background:var(--green-soft); color:var(--green); }
-.kpi-val{ font-family:'Source Serif 4', serif; font-size:24px; font-weight:600; }
-.kpi-label{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
+.sys-brand-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0c281a;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
 
-/* Panels */
-.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.panel{ background:var(--paper-raised); border:1px solid var(--line); }
-.panel-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--line); }
-.panel-head h3{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:0.08em; color:var(--ink-faint); font-weight:500; }
-.panel-body{ padding:20px; }
-.muted{ color:var(--ink-faint); font-size:13px; }
+.sys-brand-sub {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
 
-.quick-actions{ display:flex; flex-direction:column; gap:10px; }
-.quick-actions-row{ flex-direction:row; flex-wrap:wrap; }
-.qa-btn{ display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); background:var(--paper); border-radius:2px; font-size:13.5px; font-weight:500; color:var(--ink); flex:1; min-width:220px; }
-.qa-btn:hover{ border-color:var(--rust); color:var(--rust); }
+.sys-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-/* Buttons / forms */
-.btn{ display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600; padding:10px 18px; border-radius:2px; border:1px solid var(--ink); background:transparent; }
-.btn-primary{ background:var(--ink); color:#fff; border-color:var(--ink); }
-.btn-primary:hover{ background:var(--ink-soft); }
-.btn-primary:disabled{ opacity:0.6; cursor:not-allowed; }
-.btn-outline{ color:var(--ink); border-color:var(--line-strong); }
-.btn-outline:hover{ border-color:var(--ink); }
-.btn-ghost{ display:inline-flex; align-items:center; gap:6px; border-color:transparent; color:var(--rust); padding:6px 10px; }
-.btn-ghost:disabled{ opacity:0.5; cursor:not-allowed; }
-.btn-sm{ padding:8px 14px; font-size:12.5px; }
-.btn-block{ width:100%; justify-content:center; }
+.sys-nav-item {
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1b452f;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  text-align: left;
+}
 
-.field{ margin-bottom:14px; }
-.field label{ display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-faint); margin-bottom:6px; }
-.field input,.field select{ width:100%; padding:9px 11px; border:1px solid var(--line-strong); background:#fff; border-radius:2px; font-size:13.5px; color:var(--ink); }
+.sys-nav-item:hover {
+  background: rgba(255, 255, 255, 0.75);
+  color: #047857;
+}
 
-/* Table */
-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
-th{ text-align:left; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-faint); padding:8px 10px; border-bottom:1px solid var(--line); }
-td{ padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
-.int-sub{ display:block; font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
-.reason-cell{ max-width:260px; color:var(--ink-soft); font-size:12.5px; }
+.sys-nav-item.active {
+  background: #094e32;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(9, 78, 50, 0.32);
+}
 
-.badge{ font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; padding:3px 9px; border-radius:2px; letter-spacing:0.03em; display:inline-flex; align-items:center; gap:5px; }
-.badge-ink{ background:var(--navy-soft); color:var(--ink); }
-.badge-rust{ background:var(--rust-soft); color:var(--rust); }
-.badge-green{ background:var(--green-soft); color:var(--green); }
+.sys-sidebar-bottom {
+  border-top: 1px solid #7bc69e;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-/* Gauges */
-.gauge-list{ display:flex; flex-direction:column; gap:16px; }
-.gauge-row{ display:grid; grid-template-columns:140px 1fr 60px; gap:12px; align-items:center; }
-.gauge-label{ font-size:13px; font-weight:500; }
-.gauge-val{ text-align:right; font-size:12.5px; color:var(--ink-soft); }
-.gauge-flat{ text-align:right; grid-column:2 / span 2; font-size:13px; color:var(--ink); }
-.hb-track{ height:8px; background:var(--paper); border:1px solid var(--line); border-radius:2px; overflow:hidden; }
-.hb-fill{ height:100%; }
-.hb-fill.tone-green{ background:var(--green); }
-.hb-fill.tone-ink{ background:var(--ink); }
-.hb-fill.tone-rust{ background:var(--rust); }
+/* Main Layout */
+.sys-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+}
 
-/* Queue */
-.queue-stats{ display:flex; gap:10px; margin-bottom:16px; }
-.qs-item{ flex:1; text-align:center; padding:14px 10px; background:var(--paper); border:1px solid var(--line); }
-.qs-item b{ display:block; font-family:'Source Serif 4', serif; font-size:20px; }
-.qs-item span{ font-size:11px; color:var(--ink-faint); }
-.worker-strip{ display:flex; flex-wrap:wrap; gap:6px; }
-.worker-chip{ width:26px; height:26px; border-radius:4px; display:flex; align-items:center; justify-content:center; background:var(--paper); border:1px solid var(--line); color:var(--ink-faint); }
-.worker-chip.status-active{ background:var(--green-soft); color:var(--green); border-color:var(--green-soft); }
-.worker-chip.status-restarting{ background:var(--rust-soft); color:var(--rust); border-color:var(--rust-soft); }
-.worker-chip.status-idle{ background:var(--paper); color:var(--ink-faint); }
+.sys-header {
+  height: 64px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(163, 222, 192, 0.4);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1000;
+}
 
-.stage-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.stage{ text-align:center; padding:14px 18px; background:var(--paper); border:1px solid var(--line); min-width:90px; }
-.stage b{ display:block; font-family:'Source Serif 4', serif; font-size:20px; }
-.stage span{ font-size:11px; color:var(--ink-faint); }
-.stage-arrow{ color:var(--line-strong); flex:none; font-size:16px; }
+.sys-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-/* Roles */
-.role-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-.role-card .panel-head h3{ letter-spacing:0.05em; }
-.perm-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
-.perm-list li{ display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--ink-soft); }
-.perm-list li svg{ color:var(--green); flex:none; margin-top:2px; }
+.sys-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
 
-/* Audit-style feed (errors) */
-.feed-list{ display:flex; flex-direction:column; }
-.feed-row{ display:grid; grid-template-columns:70px 1fr; gap:14px; padding:12px 20px; border-bottom:1px solid var(--line); font-size:13px; }
-.feed-list .feed-row:last-child{ border-bottom:none; }
-.feed-time{ color:var(--ink-faint); font-size:11.5px; padding-top:2px; }
-.feed-role{ display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:10.5px; font-weight:600; letter-spacing:0.03em; padding:2px 7px; border-radius:2px; margin-right:4px; }
-.feed-role.tone-ink{ background:var(--navy-soft); color:var(--ink); }
-.feed-role.tone-rust{ background:var(--rust-soft); color:var(--rust); }
+.sys-role-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
 
-/* Extract-row reused */
-.extract-row{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
-.extract-row .k{ color:var(--ink-faint); }
-.extract-row .v{ font-family:'IBM Plex Mono', monospace; font-weight:500; }
-.status-chip{ display:inline-flex; align-items:center; gap:6px; background:var(--green-soft); color:var(--green); font-family:'IBM Plex Mono', monospace; font-size:11.5px; font-weight:600; padding:3px 9px; }
-.status-chip::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--green); }
+.sys-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 
-.empty-state{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:50px 20px; color:var(--ink-faint); text-align:center; }
-.empty-state b{ color:var(--ink); font-size:14.5px; }
+.sys-search-pill {
+  width: 320px;
+  height: 38px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
 
-/* Modal */
-.modal-overlay{ position:fixed; inset:0; background:rgba(27,42,65,0.5); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
-.modal{ background:#fff; width:100%; max-width:480px; max-height:88vh; overflow:auto; border-radius:2px; }
-.modal-head{ display:flex; justify-content:space-between; align-items:flex-start; padding:20px 24px; border-bottom:1px solid var(--line); }
-.modal-head h3{ font-size:17px; font-weight:600; }
-.modal-head p{ margin:4px 0 0; font-size:12.5px; color:var(--ink-faint); }
-.modal-close{ background:transparent; border:none; color:var(--ink-faint); }
-.modal-body{ padding:22px 24px; }
+.sys-search-pill input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-family: inherit;
+  width: 100%;
+  color: #111827;
+}
 
-@media (max-width:1100px){
-  .kpi-grid{ grid-template-columns:repeat(2,1fr); }
-  .grid-2{ grid-template-columns:1fr; }
-  .role-grid{ grid-template-columns:1fr; }
-  .gauge-row{ grid-template-columns:110px 1fr 46px; }
+.sys-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  cursor: pointer;
+  position: relative;
+}
+
+.sys-bell-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 1.5px solid #ffffff;
+}
+
+.sys-user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.sys-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0c5838;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sys-user-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sys-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  z-index: 50000;
+}
+
+.sys-profile-dd { width: 220px; }
+.sys-notif-dd { width: 300px; }
+
+.sys-dd-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 10px;
+}
+
+.sys-pill-sm {
+  font-size: 11px;
+  font-weight: 700;
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sys-notif-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.notif-t { font-size: 12.5px; font-weight: 700; color: #111827; }
+.notif-s { font-size: 11.5px; color: #4b6354; margin: 2px 0; }
+.notif-tm { font-size: 10.5px; color: #9ca3af; }
+
+.sys-dd-user { display: flex; flex-direction: column; padding: 4px; }
+.sys-dd-user b { font-size: 13.5px; color: #111827; }
+.sys-dd-user span { font-size: 11px; color: #059669; font-weight: 600; margin-top: 2px; }
+.sys-dd-divider { height: 1px; background: #f3f4f6; margin: 8px 0; }
+
+.sys-dd-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sys-dd-item:hover { background: #f0fdf4; color: #059669; }
+.sys-dd-item.danger:hover { background: #fef2f2; color: #dc2626; }
+
+/* Stage Content */
+.sys-content-stage {
+  padding: 28px 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sys-hero-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.sys-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sys-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0c281a;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.sys-gear-icon {
+  font-size: 20px;
+}
+
+.sys-subtitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b6354;
+  margin: 4px 0 0;
+}
+
+.sys-date-card {
+  background: #ffffff;
+  border: 1px solid rgba(163, 222, 192, 0.6);
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.sys-date-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sys-day {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.sys-date-num {
+  font-size: 13.5px;
+  color: #0c281a;
+  font-weight: 800;
+}
+
+/* 4 KPI Cards Grid */
+.sys-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.sys-kpi-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(163, 222, 192, 0.45);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sys-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #059669;
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.08);
+}
+
+.kpi-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.bg-mint { background: #dcfce7; }
+.bg-peach { background: #fee2e2; }
+
+.text-emerald { color: #059669; }
+.text-red { color: #dc2626; }
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0c281a;
+  line-height: 1.1;
+}
+
+.kpi-lbl {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4b6354;
+  margin-top: 2px;
+}
+
+.kpi-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.dot-green { background: #10b981; }
+.dot-red { background: #ef4444; }
+
+.status-txt {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Middle Row */
+.sys-middle-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: 18px;
+}
+
+.sys-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(163, 222, 192, 0.45);
+  padding: 20px 22px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+}
+
+.sys-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.sys-card-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sys-card-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0c281a;
+  margin: 0;
+}
+
+.sys-card-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+.sys-timeframe-dropdown {
+  position: relative;
+}
+
+.sys-timeframe-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8faf9;
+  border: 1px solid #d1d5db;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+
+.sys-tf-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  padding: 4px;
+  z-index: 5000;
+  width: 140px;
+}
+
+.sys-tf-item {
+  width: 100%;
+  padding: 6px 8px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sys-tf-item:hover {
+  background: #f0fdf4;
+  color: #059669;
+}
+
+/* 4 Gauges Grid */
+.sys-gauges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.gauge-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.gauge-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.gauge-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 3.5;
+}
+
+.gauge-val {
+  fill: none;
+  stroke: #0c5838;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+.gauge-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0c281a;
+}
+
+.gauge-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.gauge-ic {
+  color: #059669;
+}
+
+/* AI Worker Queue Metrics & Wave Graph */
+.sys-queue-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.q-metric-box {
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.q-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0c281a;
+}
+
+.q-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.sys-wave-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 90px;
+  padding: 0 4px 4px;
+  border-bottom: 1.5px solid #e5e7eb;
+}
+
+.wave-bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.wave-bar-fill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+/* Quick Actions */
+.sys-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.sys-quick-btn {
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.sys-quick-btn:hover {
+  background: #f0fdf4;
+  border-color: #a3dec0;
+}
+
+.q-arrow {
+  margin-left: auto;
+  color: #9ca3af;
+}
+
+/* User Management Table */
+.sys-table-wrap {
+  overflow-x: auto;
+}
+
+.sys-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.sys-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f8faf9;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #4b6354;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sys-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+.role-tag {
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.status-pill.online {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.offline {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Workers Grid */
+.sys-workers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.worker-card {
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.w-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.w-name { font-size: 14px; color: #111827; }
+.w-type { font-size: 11.5px; color: #6b7280; display: block; margin-top: 2px; }
+.w-badge { font-size: 11px; font-weight: 700; background: #dcfce7; color: #166534; padding: 2px 7px; border-radius: 4px; }
+
+.w-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  font-size: 12px;
+}
+
+.w-stats-row .lbl { font-size: 10.5px; color: #6b7280; display: block; }
+
+.w-restart-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.w-restart-btn:hover {
+  background: #f0fdf4;
+  color: #059669;
+  border-color: #a3dec0;
+}
+
+/* Logs */
+.sys-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sys-log-row {
+  background: #f8faf9;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.log-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.log-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.log-badge.error { background: #fee2e2; color: #dc2626; }
+.log-badge.warn { background: #fef3c7; color: #b45309; }
+.log-badge.info { background: #e0f2fe; color: #0284c7; }
+
+.log-srv { font-size: 12.5px; color: #111827; }
+.log-time { font-size: 11px; color: #9ca3af; margin-left: auto; }
+.log-msg { font-size: 13px; color: #1f2937; margin-bottom: 4px; }
+.log-trace { font-size: 11.5px; color: #6b7280; }
+
+/* Forms & Buttons */
+.sys-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 500px;
+  margin-top: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.form-group input, .form-group select {
+  padding: 9px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13.5px;
+  outline: none;
+}
+
+.sys-btn-primary {
+  background: #094e32;
+  color: #ffffff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.sys-btn-secondary {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Modals */
+.sys-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 24, 13, 0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 20px;
+}
+
+.sys-modal-dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.sys-modal-head {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f8faf9;
+  border-bottom: 1px solid #f3f4f6;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.sys-modal-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.06em;
+}
+
+.sys-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0c281a;
+  margin: 3px 0 0;
+}
+
+.sys-modal-close {
+  background: #f3f4f6;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sys-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sys-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f3f4f6;
+  background: #f8faf9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+
+@media (max-width: 1100px) {
+  .sys-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .sys-middle-grid { grid-template-columns: 1fr; }
+  .sys-quick-grid { grid-template-columns: 1fr; }
+  .sys-workers-grid { grid-template-columns: 1fr; }
+  .sys-gauges-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .sys-root { flex-direction: column; }
+  .sys-sidebar { width: 100%; }
 }
 `;
