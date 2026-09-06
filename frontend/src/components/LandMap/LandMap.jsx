@@ -4,7 +4,16 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { MAP_CONFIG } from './mapConfig';
 import { CADASTRAL_GEOJSON } from './cadastralData';
+import {
+  CADASTRAL_GRID_GEOJSON,
+  CADASTRAL_ROADS_GEOJSON,
+  CADASTRAL_WATERWAYS_GEOJSON,
+  CADASTRAL_VILLAGE_BOUNDARY_GEOJSON,
+  CADASTRAL_BENCHMARKS_GEOJSON,
+  CADASTRAL_SURROUNDING_PARCELS_GEOJSON
+} from './cadastralMockData';
 import { searchParcel } from './cadastralService';
+import RegionSelector, { REGION_DATA } from './RegionSelector';
 import MapControls from './MapControls';
 import MapModeSwitcher from './MapModeSwitcher';
 import SurveySearch from './SurveySearch';
@@ -66,8 +75,12 @@ function extractCenterCoordinates(feature) {
 }
 
 /**
- * Real, Interactive 3D Cadastral GIS Map Component
- * Built with MapLibre GL JS + Open Geospatial Vector Layers + Satellite Imagery
+ * Interactive 3D Cadastral GIS Map Component
+ * 
+ * Supports:
+ * - Hybrid Mode: Real Satellite Raster Imagery + Cadastral Vector Overlay
+ * - Satellite Mode: Pure High-Res Aerial Satellite Imagery
+ * - Cadastral Mode: Survey Topographic Basemap + Cadastral Vectors (No API Key Required)
  */
 export default function LandMap({ onRequestExtract }) {
   const mapContainerRef = useRef(null);
@@ -87,6 +100,47 @@ export default function LandMap({ onRequestExtract }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError, setSearchError] = useState('');
+
+  // Region state (State & District)
+  const [selectedState, setSelectedState] = useState('Tamil Nadu');
+  const [selectedDistrict, setSelectedDistrict] = useState('Coimbatore');
+
+  const handleStateChange = (newState) => {
+    setSelectedState(newState);
+    const stateObj = REGION_DATA.find(r => r.state === newState);
+    if (stateObj) {
+      const map = mapInstanceRef.current;
+      if (map && stateObj.center) {
+        map.flyTo({
+          center: stateObj.center,
+          zoom: stateObj.zoom || 15.0,
+          pitch: is3DRef.current ? 45 : 0,
+          bearing: is3DRef.current ? -12 : 0,
+          duration: 1800,
+          curve: 1.4,
+          speed: 1.2,
+          essential: true
+        });
+      }
+    }
+  };
+
+  const handleDistrictChange = (newDistrictName, districtObj) => {
+    setSelectedDistrict(newDistrictName);
+    const map = mapInstanceRef.current;
+    if (map && districtObj && districtObj.center) {
+      map.flyTo({
+        center: districtObj.center,
+        zoom: districtObj.zoom || 15.5,
+        pitch: is3DRef.current ? 45 : 0,
+        bearing: is3DRef.current ? -12 : 0,
+        duration: 1800,
+        curve: 1.4,
+        speed: 1.2,
+        essential: true
+      });
+    }
+  };
 
   // Refs for callbacks to avoid stale closures
   const is3DRef = useRef(is3D);
@@ -109,8 +163,8 @@ export default function LandMap({ onRequestExtract }) {
         map.setPaintProperty('cadastral-fill', 'fill-color', [
           'case',
           ['==', ['get', 'parcelId'], id],
-          'rgba(16, 185, 129, 0.28)',
-          'rgba(16, 185, 129, 0.05)'
+          'rgba(16, 185, 129, 0.38)',
+          'rgba(16, 185, 129, 0.10)'
         ]);
       }
 
@@ -152,34 +206,58 @@ export default function LandMap({ onRequestExtract }) {
     if (mode === 'hybrid') {
       // Hybrid: Satellite imagery + vector lines, fills, labels
       setLayerVis('satellite-layer', 'visible');
-      setLayerVis('dark-base-layer', 'none');
-      setLayerVis('cadastral-background', 'none');
+      setLayerVis('cadastral-topo-layer', 'none');
+      setLayerVis('cadastral-boundary-line', 'visible');
+      setLayerVis('cadastral-grid-lines', 'none');
+      setLayerVis('cadastral-water-line', 'none');
+      setLayerVis('cadastral-roads-casing', 'none');
+      setLayerVis('cadastral-roads-fill', 'none');
+      setLayerVis('cadastral-roads-center', 'none');
+      setLayerVis('cadastral-surrounding-fill', 'none');
+      setLayerVis('cadastral-surrounding-lines', 'none');
       setLayerVis('cadastral-fill', 'visible');
       setLayerVis('cadastral-lines', 'visible');
       setLayerVis('cadastral-labels', 'visible');
       setLayerVis('cadastral-selected-glow', 'visible');
+      setLayerVis('cadastral-benchmarks', 'none');
       document.querySelectorAll('.gis-survey-marker').forEach(el => el.style.display = 'block');
     } else if (mode === 'satellite') {
       // Satellite: Pure high-res aerial drone imagery, show only selected plot boundary
       setLayerVis('satellite-layer', 'visible');
-      setLayerVis('dark-base-layer', 'none');
-      setLayerVis('cadastral-background', 'none');
+      setLayerVis('cadastral-topo-layer', 'none');
+      setLayerVis('cadastral-boundary-line', 'none');
+      setLayerVis('cadastral-grid-lines', 'none');
+      setLayerVis('cadastral-water-line', 'none');
+      setLayerVis('cadastral-roads-casing', 'none');
+      setLayerVis('cadastral-roads-fill', 'none');
+      setLayerVis('cadastral-roads-center', 'none');
+      setLayerVis('cadastral-surrounding-fill', 'none');
+      setLayerVis('cadastral-surrounding-lines', 'none');
       setLayerVis('cadastral-fill', 'none');
       setLayerVis('cadastral-lines', 'none');
       setLayerVis('cadastral-labels', 'none');
       setLayerVis('cadastral-selected-glow', 'visible');
+      setLayerVis('cadastral-benchmarks', 'none');
       document.querySelectorAll('.gis-survey-marker').forEach(el => {
         el.style.display = el.classList.contains('selected') ? 'block' : 'none';
       });
     } else if (mode === 'cadastral') {
-      // Cadastral: Cartographic dark map + vector parcel boundaries
+      // Cadastral Map: Topographic Base + Cadastral Vectors (No API Key Required)
       setLayerVis('satellite-layer', 'none');
-      setLayerVis('dark-base-layer', 'visible');
-      setLayerVis('cadastral-background', 'visible');
+      setLayerVis('cadastral-topo-layer', 'visible');
+      setLayerVis('cadastral-boundary-line', 'visible');
+      setLayerVis('cadastral-grid-lines', 'visible');
+      setLayerVis('cadastral-water-line', 'visible');
+      setLayerVis('cadastral-roads-casing', 'visible');
+      setLayerVis('cadastral-roads-fill', 'visible');
+      setLayerVis('cadastral-roads-center', 'visible');
+      setLayerVis('cadastral-surrounding-fill', 'visible');
+      setLayerVis('cadastral-surrounding-lines', 'visible');
       setLayerVis('cadastral-fill', 'visible');
       setLayerVis('cadastral-lines', 'visible');
       setLayerVis('cadastral-labels', 'visible');
       setLayerVis('cadastral-selected-glow', 'visible');
+      setLayerVis('cadastral-benchmarks', 'visible');
       document.querySelectorAll('.gis-survey-marker').forEach(el => el.style.display = 'block');
     }
   }, []);
@@ -263,41 +341,60 @@ export default function LandMap({ onRequestExtract }) {
         version: 8,
         glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
+          // Satellite Raster Layer Source (Esri World Imagery)
           'satellite-source': MAP_CONFIG.sources.satellite,
-          'dark-base-source': MAP_CONFIG.sources.darkBase,
+
+          // Cadastral Topographic Survey Base (Esri World Topo Map) - 100% Free
+          'cadastral-topo-source': MAP_CONFIG.sources.cadastralTopo,
+
+          // Mock Cadastral Vector Sources
+          'cadastral-boundary-source': {
+            type: 'geojson',
+            data: CADASTRAL_VILLAGE_BOUNDARY_GEOJSON
+          },
+          'cadastral-grid-source': {
+            type: 'geojson',
+            data: CADASTRAL_GRID_GEOJSON
+          },
+          'cadastral-water-source': {
+            type: 'geojson',
+            data: CADASTRAL_WATERWAYS_GEOJSON
+          },
+          'cadastral-roads-source': {
+            type: 'geojson',
+            data: CADASTRAL_ROADS_GEOJSON
+          },
+          'cadastral-surrounding-source': {
+            type: 'geojson',
+            data: CADASTRAL_SURROUNDING_PARCELS_GEOJSON
+          },
           'cadastral-source': {
             type: 'geojson',
             data: {
               type: 'FeatureCollection',
               features: featuresRef.current
             }
+          },
+          'cadastral-benchmarks-source': {
+            type: 'geojson',
+            data: CADASTRAL_BENCHMARKS_GEOJSON
           }
         },
         layers: [
-          // Background layer for Cadastral Mode
+          // 1. Cadastral Topo Raster Base Layer (visible in cadastral mode)
           {
-            id: 'cadastral-background',
-            type: 'background',
-            layout: {
-              visibility: 'none'
-            },
-            paint: {
-              'background-color': '#02120a'
-            }
-          },
-          // Dark Carto Base (used in cadastral mode for roads/water reference)
-          {
-            id: 'dark-base-layer',
+            id: 'cadastral-topo-layer',
             type: 'raster',
-            source: 'dark-base-source',
+            source: 'cadastral-topo-source',
             layout: {
               visibility: 'none'
             },
             paint: {
-              'raster-opacity': 0.85
+              'raster-opacity': 0.92,
+              'raster-fade-duration': 200
             }
           },
-          // Satellite Raster Layer (used in hybrid & satellite modes)
+          // 2. Satellite Raster Layer (used in hybrid & satellite modes)
           {
             id: 'satellite-layer',
             type: 'raster',
@@ -310,60 +407,174 @@ export default function LandMap({ onRequestExtract }) {
               'raster-fade-duration': 200
             }
           },
-          // Cadastral Polygon Fills
+          // 3. Cadastral Survey Coordinate Grid Lines
+          {
+            id: 'cadastral-grid-lines',
+            type: 'line',
+            source: 'cadastral-grid-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'line-color': 'rgba(16, 185, 129, 0.35)',
+              'line-width': 1.2,
+              'line-dasharray': [3, 3]
+            }
+          },
+          // 4. Cadastral Irrigation Canal / Waterways
+          {
+            id: 'cadastral-water-line',
+            type: 'line',
+            source: 'cadastral-water-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'line-color': '#0284c7',
+              'line-width': 4.5,
+              'line-opacity': 0.85
+            }
+          },
+          // 5. Cadastral Roads Network
+          {
+            id: 'cadastral-roads-casing',
+            type: 'line',
+            source: 'cadastral-roads-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'line-color': '#064e3b',
+              'line-width': 6.5
+            }
+          },
+          {
+            id: 'cadastral-roads-fill',
+            type: 'line',
+            source: 'cadastral-roads-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'line-color': '#047857',
+              'line-width': 4
+            }
+          },
+          {
+            id: 'cadastral-roads-center',
+            type: 'line',
+            source: 'cadastral-roads-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'line-color': 'rgba(255, 255, 255, 0.7)',
+              'line-width': 1.2,
+              'line-dasharray': [4, 4]
+            }
+          },
+          // 6. Village Revenue Boundary Outer Line
+          {
+            id: 'cadastral-boundary-line',
+            type: 'line',
+            source: 'cadastral-boundary-source',
+            layout: {
+              visibility: 'visible'
+            },
+            paint: {
+              'line-color': '#d97706',
+              'line-width': 2.5,
+              'line-dasharray': [5, 3]
+            }
+          },
+          // 7. Surrounding Buffer Cadastral Plots
+          {
+            id: 'cadastral-surrounding-fill',
+            type: 'fill',
+            source: 'cadastral-surrounding-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'fill-color': 'rgba(6, 78, 59, 0.15)',
+              'fill-opacity': 1
+            }
+          },
+          {
+            id: 'cadastral-surrounding-lines',
+            type: 'line',
+            source: 'cadastral-surrounding-source',
+            layout: {
+              visibility: 'none'
+            },
+            paint: {
+              'line-color': 'rgba(16, 185, 129, 0.45)',
+              'line-width': 1.5,
+              'line-dasharray': [2, 2]
+            }
+          },
+          // 8. Main Cadastral Polygon Fills
           {
             id: 'cadastral-fill',
             type: 'fill',
             source: 'cadastral-source',
+            layout: {
+              visibility: 'visible'
+            },
             paint: {
               'fill-color': [
                 'case',
                 ['==', ['get', 'parcelId'], 'PAR-143-2A'],
-                'rgba(16, 185, 129, 0.28)',
-                'rgba(16, 185, 129, 0.05)'
+                'rgba(16, 185, 129, 0.38)',
+                'rgba(16, 185, 129, 0.10)'
               ],
               'fill-opacity': 1
             }
           },
-          // Cadastral Polygon Boundary Lines
+          // 9. Main Cadastral Polygon Boundary Lines
           {
             id: 'cadastral-lines',
             type: 'line',
             source: 'cadastral-source',
+            layout: {
+              visibility: 'visible'
+            },
             paint: {
-              'line-color': '#10b981',
+              'line-color': '#059669',
               'line-width': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                14, 1.5,
-                17, 2.5,
-                19, 3.5
+                14, 1.8,
+                17, 3.0,
+                19, 4.0
               ],
               'line-opacity': 0.95
             }
           },
-          // Selected Parcel Highlight Outline
+          // 10. Selected Parcel Highlight Outline
           {
             id: 'cadastral-selected-glow',
             type: 'line',
             source: 'cadastral-source',
             filter: ['==', ['get', 'parcelId'], 'PAR-143-2A'],
+            layout: {
+              visibility: 'visible'
+            },
             paint: {
               'line-color': '#ffffff',
               'line-width': 3.5,
-              'line-blur': 0,
               'line-opacity': 1
             }
           },
-          // Cadastral Survey Number Text Labels attached to centroid
+          // 11. Cadastral Survey Number Text Labels
           {
             id: 'cadastral-labels',
             type: 'symbol',
             source: 'cadastral-source',
             layout: {
+              visibility: 'visible',
               'text-field': ['get', 'surveyNumber'],
-              'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
               'text-size': [
                 'interpolate',
                 ['linear'],
@@ -379,6 +590,24 @@ export default function LandMap({ onRequestExtract }) {
               'text-color': '#ffffff',
               'text-halo-color': 'rgba(2, 16, 11, 0.95)',
               'text-halo-width': 2.5
+            }
+          },
+          // 12. Geodetic Benchmarks & Ground Control Points
+          {
+            id: 'cadastral-benchmarks',
+            type: 'symbol',
+            source: 'cadastral-benchmarks-source',
+            layout: {
+              visibility: 'none',
+              'text-field': ['get', 'code'],
+              'text-size': 11,
+              'text-anchor': 'bottom',
+              'text-offset': [0, -0.6]
+            },
+            paint: {
+              'text-color': '#0284c7',
+              'text-halo-color': 'rgba(2, 16, 11, 0.95)',
+              'text-halo-width': 2
             }
           }
         ]
@@ -619,14 +848,23 @@ export default function LandMap({ onRequestExtract }) {
 
   return (
     <div className={`gis-interactive-wrapper ${isFullscreen ? 'fullscreen-active' : ''}`}>
-      {/* Top GIS Toolbar: Search on Left, 3 Modes on Right */}
+      {/* Top GIS Toolbar: State & District Selector, Survey Search & Map Modes */}
       <div className="gis-toolbar">
-        <SurveySearch 
-          onSearch={handleSearch}
-          isSearching={isSearching}
-          searchStatus={searchStatus}
-          searchError={searchError}
-        />
+        <div className="gis-toolbar-search-group">
+          <RegionSelector 
+            selectedState={selectedState}
+            selectedDistrict={selectedDistrict}
+            onStateChange={handleStateChange}
+            onDistrictChange={handleDistrictChange}
+          />
+
+          <SurveySearch 
+            onSearch={handleSearch}
+            isSearching={isSearching}
+            searchStatus={searchStatus}
+            searchError={searchError}
+          />
+        </div>
 
         <MapModeSwitcher 
           activeMode={mapMode}
@@ -638,6 +876,23 @@ export default function LandMap({ onRequestExtract }) {
       <div className="gis-display-grid">
         <div className="gis-map-viewport">
           <div ref={mapContainerRef} className="gis-map-canvas-container" />
+
+          {/* Floating Cadastral Map Mode Blueprint Badge */}
+          {mapMode === 'cadastral' && (
+            <div className="gis-cadastral-blueprint-badge">
+              <div className="blueprint-badge-header">
+                <span className="blueprint-dot"></span>
+                <span>STATE REVENUE CADASTRAL BENCHMARK</span>
+              </div>
+              <div className="blueprint-badge-items">
+                <span>🟡 Village Boundary</span>
+                <span>🟢 Parcels</span>
+                <span>🔵 Canal</span>
+                <span>⚪ Roads</span>
+                <span>🔷 Benchmarks</span>
+              </div>
+            </div>
+          )}
 
           {/* Floating Controls (+ / - / 3D / Compass / Fullscreen) */}
           <MapControls 
@@ -661,4 +916,3 @@ export default function LandMap({ onRequestExtract }) {
     </div>
   );
 }
-

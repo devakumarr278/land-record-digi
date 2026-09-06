@@ -4,18 +4,23 @@ import {
   BarChart3, Settings as SettingsIcon, LogOut, Search, Bell, ChevronRight,
   ChevronDown, CheckCircle2, Eye, MapPin, X, ZoomIn, ZoomOut, Crosshair,
   Calendar, Check, XCircle, Download, FileCheck, Layers, ArrowRight,
-  ShieldCheck, Shield, Clock, ExternalLink, User
+  ShieldCheck, Shield, Clock, ExternalLink, User, Sparkles
 } from 'lucide-react';
 import auditbg from '../../assets/auditbg.png';
 import satelliteMap from '../../assets/satellite_parcel_map.jpg';
 import logoImg from '../../assets/logo.jpg';
 import RealCadastralMap from '../Common/RealCadastralMap';
+import ConflictGraphView from '../Conflict/ConflictGraphView';
+import ParcelVerificationCard from '../Parcel/ParcelVerificationCard';
+import DiscrepancyIntelligenceView from '../DiscrepancyIntelligence/DiscrepancyIntelligenceView';
+import '../DiscrepancyIntelligence/DiscrepancyIntelligence.css';
 
 /* =========================================================================
    MOCK DATA FOR REGISTRAR / TAHSILDAR
    ========================================================================= */
 
 const INITIAL_RECORDS = [
+  { id: 'LR-124/2A', survey: '124/2A', village: 'Kinathukadavu', taluk: 'Pollachi', district: 'Coimbatore', score: '62%', scoreNum: 62, issue: 'Contradiction', owner: 'Kannan', area: '2.40 Acres', operator: 'Anand P', scanFile: '/cadastral_map_125_2.jpg' },
   { id: 'LR-1021', survey: '125/2', village: 'Kinathukadavu', taluk: 'Pollachi', district: 'Coimbatore', score: '43%', scoreNum: 43, issue: 'Flagged', owner: 'Ravi Kumar', area: '2.50 Acres', operator: 'Anand P', scanFile: '/cadastral_map_125_2.jpg' },
   { id: 'LR-1014', survey: '118/3', village: 'Anaimalai', taluk: 'Pollachi', district: 'Coimbatore', score: '98%', scoreNum: 98, issue: 'Clear', owner: 'Meena R', area: '1.20 Acres', operator: 'Deepa N', scanFile: '/cadastral_map_118_3.jpg' },
   { id: 'LR-1009', survey: '54/2', village: 'Sulur', taluk: 'Sulur', district: 'Coimbatore', score: '99%', scoreNum: 99, issue: 'Clear', owner: 'Deepa N', area: '3.10 Acres', operator: 'Anand P', scanFile: '/cadastral_map_125_2.jpg' },
@@ -24,6 +29,7 @@ const INITIAL_RECORDS = [
 ];
 
 const RECENT_ACTIVITIES = [
+  { t: '10:45 AM', action: 'Multi-source contradiction flagged', doc: 'LR-124/2A', tone: 'red' },
   { t: '10:42 AM', action: 'Area change approved', doc: 'LR-1021', tone: 'green' },
   { t: '10:18 AM', action: 'New scan uploaded', doc: 'LR-1014', tone: 'blue' },
   { t: '09:54 AM', action: 'Case reassigned', doc: 'LR-1009', tone: 'green' },
@@ -31,6 +37,7 @@ const RECENT_ACTIVITIES = [
 ];
 
 const DISCREPANCIES = [
+  { id: 'DC-201', survey: '124/2A', text: 'Break in mutation chain: 2017 transfer to Kannan lacks registered deed link.', level: 'Critical', record: 'LR-124/2A' },
   { id: 'DC-204', survey: '125/2', text: 'Recorded area in Survey table conflicts with 2008 mutation record (2.50 vs 2.10 Acres).', level: 'High', record: 'LR-1021' },
   { id: 'DC-205', survey: '77/1', text: 'Owner name spelling differs from state Aadhaar-linked revenue record.', level: 'Medium', record: 'LR-1017' },
   { id: 'DC-206', survey: '31/6', text: 'Village boundary classification code mismatch.', level: 'Low', record: 'LR-1002' },
@@ -40,8 +47,9 @@ const DISCREPANCIES = [
    REGISTRAR / TAHSILDAR DASHBOARD COMPONENT
    ========================================================================= */
 
-export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = () => {}, addToast = () => {} }) {
+export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = () => {}, addToast = () => {}, initialParcelId = null }) {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedParcelId, setSelectedParcelId] = useState(initialParcelId);
   const [searchQuery, setSearchQuery] = useState('');
   const [records, setRecords] = useState(INITIAL_RECORDS);
   const [activities, setActivities] = useState(RECENT_ACTIVITIES);
@@ -123,24 +131,29 @@ export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = 
           <nav className="reg-nav-list">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+              { id: 'discrepancy_intelligence', label: 'Discrepancy Intelligence', icon: Sparkles, badge: 'AI' },
+              { id: 'conflicts', label: 'Conflict Graph', icon: AlertTriangle, badge: '3' },
               { id: 'pending', label: 'Pending', icon: FileText },
               { id: 'records', label: 'Land Records', icon: FolderOpen },
-              { id: 'discrepancy', label: 'Discrepancy', icon: AlertTriangle },
               { id: 'history', label: 'History', icon: History },
               { id: 'audit', label: 'Audit', icon: ScrollText },
               { id: 'analytics', label: 'Analytics', icon: BarChart3 },
               { id: 'settings', label: 'Settings', icon: SettingsIcon },
             ].map(item => {
               const Icon = item.icon;
-              const active = activeTab === item.id;
+              const active = activeTab === item.id && !selectedParcelId;
               return (
                 <button
                   key={item.id}
                   className={`reg-nav-item ${active ? 'active' : ''}`}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setSelectedParcelId(null);
+                  }}
                 >
                   <Icon size={18} strokeWidth={active ? 2.4 : 2} />
                   <span>{item.label}</span>
+                  {item.badge && <span className="reg-nav-badge-red">{item.badge}</span>}
                 </button>
               );
             })}
@@ -170,22 +183,31 @@ export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = 
       <div className="reg-main">
         {/* Top Header */}
         <header className="reg-header">
-          <div className="reg-header-title">
-            Tehsildar / Sub-Registrar
+          {/* Left: Breadcrumbs / Quick Info */}
+          <div className="reg-header-left">
+            <div className="reg-jurisdiction">
+              <span className="reg-j-dot" />
+              <span className="reg-j-text">Coimbatore North Registration District</span>
+            </div>
+            <span className="reg-sep">•</span>
+            <span className="reg-sub-dept">Sub-Registrar Office #04</span>
           </div>
 
-          <form className="reg-search-bar" onSubmit={e => { e.preventDefault(); setActiveTab('records'); }}>
-            <Search size={16} className="reg-search-icon" />
-            <input
-              type="text"
-              placeholder="Search records, survey no., owner name..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-          </form>
-
+          {/* Right Controls */}
           <div className="reg-header-right">
-            {/* Notification Bell */}
+            {/* Search */}
+            <div className="reg-search">
+              <Search size={16} className="reg-search-icon" />
+              <input
+                type="text"
+                placeholder="Search survey no, owner, patta..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="reg-search-input"
+              />
+            </div>
+
+            {/* Notifications */}
             <button
               className="reg-icon-btn"
               onClick={() => setNotifOpen(!notifOpen)}
@@ -210,13 +232,19 @@ export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = 
                     <span>Authorized Registration Officer</span>
                   </div>
                   <div className="reg-dd-divider" />
-                  <button className="reg-dd-item" onClick={() => { setActiveTab('records'); setProfileOpen(false); }}>
+                  <button className="reg-dd-item" onClick={() => { setActiveTab('records'); setSelectedParcelId(null); setProfileOpen(false); }}>
                     <FolderOpen size={14} /> Land Registry
                   </button>
-                  <button className="reg-dd-item" onClick={() => { setActiveTab('audit'); setProfileOpen(false); }}>
+                  <button className="reg-dd-item" onClick={() => { setActiveTab('discrepancy_intelligence'); setSelectedParcelId(null); setProfileOpen(false); }}>
+                    <Sparkles size={14} /> Discrepancy Intelligence
+                  </button>
+                  <button className="reg-dd-item" onClick={() => { setActiveTab('conflicts'); setSelectedParcelId(null); setProfileOpen(false); }}>
+                    <AlertTriangle size={14} /> Conflict Graph
+                  </button>
+                  <button className="reg-dd-item" onClick={() => { setActiveTab('audit'); setSelectedParcelId(null); setProfileOpen(false); }}>
                     <ScrollText size={14} /> Audit Trail
                   </button>
-                  <button className="reg-dd-item" onClick={() => { setActiveTab('settings'); setProfileOpen(false); }}>
+                  <button className="reg-dd-item" onClick={() => { setActiveTab('settings'); setSelectedParcelId(null); setProfileOpen(false); }}>
                     <SettingsIcon size={14} /> Settings
                   </button>
                   <div className="reg-dd-divider" />
@@ -229,8 +257,36 @@ export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = 
           </div>
         </header>
 
-        {/* Dashboard View */}
-        {activeTab === 'dashboard' && (
+        {/* PARCEL INVESTIGATION WORKSPACE (STEPS 2 - 5) */}
+        {selectedParcelId && (
+          <div className="reg-content">
+            <ParcelVerificationCard
+              parcelId={selectedParcelId}
+              onBack={() => setSelectedParcelId(null)}
+              addToast={addToast}
+            />
+          </div>
+        )}
+
+        {/* DISCREPANCY INTELLIGENCE ENGINE */}
+        {!selectedParcelId && (activeTab === 'discrepancy_intelligence' || activeTab === 'discrepancy') && (
+          <div className="reg-content">
+            <DiscrepancyIntelligenceView
+              onNavigateToParcel={(id) => setSelectedParcelId(id)}
+              addToast={addToast}
+            />
+          </div>
+        )}
+
+        {/* CONFLICT GRAPH & REAL MAP VIEW */}
+        {!selectedParcelId && activeTab === 'conflicts' && (
+          <div className="reg-content">
+            <ConflictGraphView onSelectParcel={(id) => setSelectedParcelId(id)} />
+          </div>
+        )}
+
+        {/* EXACT ORIGINAL DASHBOARD VIEW */}
+        {!selectedParcelId && activeTab === 'dashboard' && (
           <div className="reg-content">
             {/* Hero Title & Date Row */}
             <div className="reg-hero-row">
@@ -339,8 +395,8 @@ export default function RegistrarDashboard({ userName = 'Tahsildar', onLogout = 
                             </span>
                           </td>
                           <td>
-                            <button className="btn-review" onClick={() => setReviewDoc(r)}>
-                              Review →
+                            <button className="btn-review" onClick={() => setSelectedParcelId(r.id)}>
+                              Investigate →
                             </button>
                           </td>
                         </tr>

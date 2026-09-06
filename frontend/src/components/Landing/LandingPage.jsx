@@ -3,6 +3,7 @@ import AuthModal from '../Auth/AuthModal';
 import LandMap from '../LandMap/LandMap';
 import bgImage from '../../assets/bgimage.png';
 import logoImg from '../../assets/logo.jpg';
+import { LANGUAGES, t } from './translations';
 import './Landing.css';
 
 // Cadastral Parcels Data precisely assigned to each white-bordered land plot in bgimage.png
@@ -269,17 +270,6 @@ const CADASTRAL_PARCELS = [
   }
 ];
 
-const LANGUAGES = [
-  { code: 'EN', name: 'English' },
-  { code: 'HI', name: 'हिन्दी (Hindi)' },
-  { code: 'TA', name: 'தமிழ் (Tamil)' },
-  { code: 'TE', name: 'తెలుగు (Telugu)' },
-  { code: 'KN', name: 'ಕನ್ನಡ (Kannada)' },
-  { code: 'MR', name: 'मराठी (Marathi)' },
-  { code: 'BN', name: 'বাংলা (Bengali)' },
-  { code: 'GU', name: 'ગુજરાતી (Gujarati)' }
-];
-
 export default function LandingPage({ onLogin }) {
   const [authModal, setAuthModal] = useState(null); // 'login' | 'register' | null
   const [authRole, setAuthRole] = useState('citizen');
@@ -290,11 +280,38 @@ export default function LandingPage({ onLogin }) {
   
   // UI Dropdowns & Modals
   const [langMenuOpen, setLangMenuOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState('EN');
+  const [currentLang, setCurrentLang] = useState(() => {
+    try {
+      return localStorage.getItem('land_record_lang') || 'EN';
+    } catch {
+      return 'EN';
+    }
+  });
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [showDemoModal, setShowDemoModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeGisLayer, setActiveGisLayer] = useState('all'); // 'all' | 'satellite' | 'cadastral'
+
+  const langDropdownRef = useRef(null);
+
+  // Close language dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectLang = (code) => {
+    setCurrentLang(code);
+    try {
+      localStorage.setItem('land_record_lang', code);
+    } catch (e) {
+      console.warn('Could not save language preference:', e);
+    }
+    setLangMenuOpen(false);
+  };
 
   // Scroll listener for sticky navbar styling
   useEffect(() => {
@@ -386,8 +403,8 @@ export default function LandingPage({ onLogin }) {
             </div>
             <div className="brand-titles">
               <span className="brand-main-title">NilOra</span>
-              <span className="brand-sub-title">Intelligent Cadastral Land Digitization &amp; Verification</span>
-              <span className="brand-badge">Govt. of India &nbsp;|&nbsp; MoRD</span>
+              <span className="brand-sub-title">{t(currentLang, 'brand_sub_title')}</span>
+              <span className="brand-badge">{t(currentLang, 'brand_badge')}</span>
             </div>
           </div>
 
@@ -398,42 +415,42 @@ export default function LandingPage({ onLogin }) {
               className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); scrollToId('home'); }}
             >
-              Home
+              {t(currentLang, 'nav_home')}
             </a>
             <a 
               href="#platform" 
               className={`nav-item ${activeNav === 'platform' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); scrollToId('platform'); }}
             >
-              Platform
+              {t(currentLang, 'nav_platform')}
             </a>
             <a 
               href="#gis" 
               className={`nav-item ${activeNav === 'gis' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); scrollToId('gis'); }}
             >
-              GIS
+              {t(currentLang, 'nav_gis')}
             </a>
             <a 
               href="#validation" 
               className={`nav-item ${activeNav === 'validation' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); scrollToId('validation'); }}
             >
-              Validation
+              {t(currentLang, 'nav_validation')}
             </a>
             <a 
               href="#use-cases" 
               className={`nav-item ${activeNav === 'use-cases' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); scrollToId('use-cases'); }}
             >
-              Use Cases
+              {t(currentLang, 'nav_use_cases')}
             </a>
             <a 
               href="#about" 
               className={`nav-item ${activeNav === 'about' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); scrollToId('about'); }}
             >
-              About
+              {t(currentLang, 'nav_about')}
             </a>
           </nav>
 
@@ -442,9 +459,9 @@ export default function LandingPage({ onLogin }) {
             {/* Search Icon Button */}
             <button 
               className="icon-btn" 
-              title="Search Land Records"
+              title={t(currentLang, 'search_tooltip')}
               onClick={() => setShowSearchModal(true)}
-              aria-label="Search"
+              aria-label={t(currentLang, 'search_tooltip')}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -453,7 +470,7 @@ export default function LandingPage({ onLogin }) {
             </button>
 
             {/* Language Selector Dropdown */}
-            <div className="lang-dropdown-wrapper">
+            <div className="lang-dropdown-wrapper" ref={langDropdownRef}>
               <button 
                 className="lang-selector-btn"
                 onClick={() => setLangMenuOpen(!langMenuOpen)}
@@ -470,10 +487,7 @@ export default function LandingPage({ onLogin }) {
                     <button 
                       key={lang.code}
                       className={`lang-menu-item ${currentLang === lang.code ? 'active' : ''}`}
-                      onClick={() => {
-                        setCurrentLang(lang.code);
-                        setLangMenuOpen(false);
-                      }}
+                      onClick={() => handleSelectLang(lang.code)}
                     >
                       <span>{lang.name}</span>
                       {currentLang === lang.code && <span>✓</span>}
@@ -488,7 +502,7 @@ export default function LandingPage({ onLogin }) {
               className="btn-login-ghost"
               onClick={handleOpenLogin}
             >
-              Login
+              {t(currentLang, 'nav_login')}
             </button>
 
             {/* Get Started Button */}
@@ -496,7 +510,7 @@ export default function LandingPage({ onLogin }) {
               className="btn-primary-teal"
               onClick={() => handleOpenRegister('citizen')}
             >
-              Get Started
+              {t(currentLang, 'nav_get_started')}
             </button>
           </div>
         </div>
@@ -530,13 +544,13 @@ export default function LandingPage({ onLogin }) {
                 onMouseLeave={() => setHoveredParcelId(null)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Cadastral Land Boundary (invisible by default, clean highlight on hover matching image white borders) */}
+                {/* Cadastral Land Boundary */}
                 <path 
                   d={parcel.polyPath}
                   className={`cadastral-poly ${isActive ? 'active-poly' : ''} ${isPrimary && !hoveredParcelId ? 'primary-subtle' : ''}`}
                 />
 
-                {/* Assigned Survey Number Badge (clean, visible on each white-bordered plot) */}
+                {/* Assigned Survey Number Badge */}
                 <g 
                   transform={`translate(${parcel.labelX}, ${parcel.labelY})`}
                   className={`cadastral-badge-group ${isActive ? 'active' : ''}`}
@@ -600,29 +614,22 @@ export default function LandingPage({ onLogin }) {
           <div className="hero-main-content">
             {/* Left Hero Column with Staggered Entrance Animations & Dark Fade */}
             <div className="hero-left">
-              <span className="hero-eyebrow anim-hero-eyebrow">DIGITAL LAND RECORD INTELLIGENCE</span>
+              <span className="hero-eyebrow anim-hero-eyebrow">{t(currentLang, 'hero_eyebrow')}</span>
               <h1 className="hero-title anim-hero-title">
-                Transform Paper Deeds<br />
-                <span className="hero-title-highlight">into Verifiable</span><br />
-                Digital Records.
+                {t(currentLang, 'hero_title_1')}<br />
+                <span className="hero-title-highlight">{t(currentLang, 'hero_title_2')}</span><br />
+                {t(currentLang, 'hero_title_3')}
               </h1>
               <p className="hero-tagline anim-hero-tagline">
-                Digitize. Validate. Understand.
+                {t(currentLang, 'hero_tagline')}
               </p>
               <div className="hero-cta-row anim-hero-ctas">
                 <button 
                   className="btn-hero-explore"
                   onClick={() => scrollToId('platform')}
                 >
-                  <span>Explore Platform</span>
+                  <span>{t(currentLang, 'hero_explore')}</span>
                   <span className="arrow-right-icon">→</span>
-                </button>
-                <button 
-                  className="btn-hero-demo"
-                  onClick={() => setShowDemoModal(true)}
-                >
-                  <span className="play-circle-icon">▶</span>
-                  <span>Watch Demo</span>
                 </button>
               </div>
             </div>
@@ -631,7 +638,7 @@ export default function LandingPage({ onLogin }) {
             <div className="hero-right">
               <div className="parcel-intel-card anim-hero-card">
                 <div className="card-header-row">
-                  <span className="card-title">Parcel Intelligence</span>
+                  <span className="card-title">{t(currentLang, 'card_title')}</span>
                   <span className="verified-badge-pill">
                     <span className="dot-badge">●</span>
                     <span>{currentDisplayedParcel.mutationStatus}</span>
@@ -640,35 +647,35 @@ export default function LandingPage({ onLogin }) {
 
                 <div className="card-data-table">
                   <div className="card-data-row">
-                    <span className="data-label">Survey Number</span>
+                    <span className="data-label">{t(currentLang, 'card_sy_no')}</span>
                     <span className="data-value accent-survey">{currentDisplayedParcel.surveyNo}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">Owner</span>
+                    <span className="data-label">{t(currentLang, 'card_owner')}</span>
                     <span className="data-value">{currentDisplayedParcel.owner}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">Area</span>
+                    <span className="data-label">{t(currentLang, 'card_area')}</span>
                     <span className="data-value">{currentDisplayedParcel.area}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">Village</span>
+                    <span className="data-label">{t(currentLang, 'card_village')}</span>
                     <span className="data-value">{currentDisplayedParcel.village}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">District</span>
+                    <span className="data-label">{t(currentLang, 'card_district')}</span>
                     <span className="data-value">{currentDisplayedParcel.district}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">Mutation Status</span>
+                    <span className="data-label">{t(currentLang, 'card_mutation_status')}</span>
                     <span className="data-value status-validated">{currentDisplayedParcel.mutationStatus}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">Encumbrances</span>
+                    <span className="data-label">{t(currentLang, 'card_encumbrances')}</span>
                     <span className="data-value">{currentDisplayedParcel.encumbrances}</span>
                   </div>
                   <div className="card-data-row">
-                    <span className="data-label">Confidence</span>
+                    <span className="data-label">{t(currentLang, 'card_confidence')}</span>
                     <span className="data-value confidence-score">{currentDisplayedParcel.confidence}</span>
                   </div>
                 </div>
@@ -682,7 +689,7 @@ export default function LandingPage({ onLogin }) {
                     <line x1="8" y1="2" x2="8" y2="18"></line>
                     <line x1="16" y1="6" x2="16" y2="22"></line>
                   </svg>
-                  <span>View on Map</span>
+                  <span>{t(currentLang, 'card_view_map')}</span>
                   <span>→</span>
                 </button>
               </div>
@@ -705,28 +712,28 @@ export default function LandingPage({ onLogin }) {
           <div className="hero-stats-bar anim-hero-stats">
             <div className="stats-grid">
               <div className="stat-card-item">
-                <span className="stat-number">22+</span>
-                <span className="stat-label">Indian Languages</span>
+                <span className="stat-number">{t(currentLang, 'stat_lang_count')}</span>
+                <span className="stat-label">{t(currentLang, 'stat_lang_label')}</span>
               </div>
               <div className="stat-divider-line"></div>
               <div className="stat-card-item">
-                <span className="stat-number">100M+</span>
-                <span className="stat-label">Legacy Records</span>
+                <span className="stat-number">{t(currentLang, 'stat_records_count')}</span>
+                <span className="stat-label">{t(currentLang, 'stat_records_label')}</span>
               </div>
               <div className="stat-divider-line"></div>
               <div className="stat-card-item">
-                <span className="stat-number">GIS</span>
-                <span className="stat-label">Integrated</span>
+                <span className="stat-number">{t(currentLang, 'stat_gis_count')}</span>
+                <span className="stat-label">{t(currentLang, 'stat_gis_label')}</span>
               </div>
               <div className="stat-divider-line"></div>
               <div className="stat-card-item">
-                <span className="stat-number">Human</span>
-                <span className="stat-label">Verified</span>
+                <span className="stat-number">{t(currentLang, 'stat_human_count')}</span>
+                <span className="stat-label">{t(currentLang, 'stat_human_label')}</span>
               </div>
               <div className="stat-divider-line"></div>
               <div className="stat-card-item">
-                <span className="stat-number">Trusted</span>
-                <span className="stat-label">&amp; Scalable</span>
+                <span className="stat-number">{t(currentLang, 'stat_trust_count')}</span>
+                <span className="stat-label">{t(currentLang, 'stat_trust_label')}</span>
               </div>
             </div>
           </div>
@@ -737,56 +744,56 @@ export default function LandingPage({ onLogin }) {
       <section className="content-section section-alt-bg" id="platform">
         <div className="wrap">
           <div className="section-header-block reveal-on-scroll">
-            <span className="section-eyebrow">DIGITAL TRANSFORMATION PIPELINE</span>
-            <h2 className="section-main-title">From fragile paper archives to immutable spatial truth</h2>
+            <span className="section-eyebrow">{t(currentLang, 'pipeline_eyebrow')}</span>
+            <h2 className="section-main-title">{t(currentLang, 'pipeline_title')}</h2>
             <p className="section-description">
-              Our automated 3-stage intelligence engine handles damaged colonial maps, multilingual title deeds, and cadastral spatial discrepancies with cryptographic audit logs.
+              {t(currentLang, 'pipeline_desc')}
             </p>
           </div>
 
           <div className="pipeline-steps-grid">
             {/* Step 1 */}
             <div className="pipeline-card reveal-on-scroll stagger-1">
-              <span className="pipeline-step-badge">STEP 01</span>
+              <span className="pipeline-step-badge">{t(currentLang, 'step1_badge')}</span>
               <div className="pipeline-icon-box">📄</div>
-              <h3>Multilingual OCR Ingestion</h3>
+              <h3>{t(currentLang, 'step1_title')}</h3>
               <p>
-                Proprietary Indic OCR parses complex handwritten scripts, Urdu revenue terms, Modi script, Tamil palm-leaf registers, and English deeds.
+                {t(currentLang, 'step1_desc')}
               </p>
               <div className="pipeline-feature-tags">
-                <span className="tag-pill">22 Indic Languages</span>
-                <span className="tag-pill">Field Extraction</span>
-                <span className="tag-pill">Pre-processing Filters</span>
+                <span className="tag-pill">{t(currentLang, 'step1_tag1')}</span>
+                <span className="tag-pill">{t(currentLang, 'step1_tag2')}</span>
+                <span className="tag-pill">{t(currentLang, 'step1_tag3')}</span>
               </div>
             </div>
 
             {/* Step 2 */}
             <div className="pipeline-card reveal-on-scroll stagger-2">
-              <span className="pipeline-step-badge">STEP 02</span>
+              <span className="pipeline-step-badge">{t(currentLang, 'step2_badge')}</span>
               <div className="pipeline-icon-box">🛰️</div>
-              <h3>AI Cadastral Alignment</h3>
+              <h3>{t(currentLang, 'step2_title')}</h3>
               <p>
-                Computer vision matches legacy village survey maps (FMB sketches) to satellite drone orthomosaics with automated boundary snapping and discrepancy alerts.
+                {t(currentLang, 'step2_desc')}
               </p>
               <div className="pipeline-feature-tags">
-                <span className="tag-pill">Geo-referencing</span>
-                <span className="tag-pill">Subdivision Splitting</span>
-                <span className="tag-pill">Overlap Detection</span>
+                <span className="tag-pill">{t(currentLang, 'step2_tag1')}</span>
+                <span className="tag-pill">{t(currentLang, 'step2_tag2')}</span>
+                <span className="tag-pill">{t(currentLang, 'step2_tag3')}</span>
               </div>
             </div>
 
             {/* Step 3 */}
             <div className="pipeline-card reveal-on-scroll stagger-3">
-              <span className="pipeline-step-badge">STEP 03</span>
+              <span className="pipeline-step-badge">{t(currentLang, 'step3_badge')}</span>
               <div className="pipeline-icon-box">🔐</div>
-              <h3>Immutable Cryptographic Ledger</h3>
+              <h3>{t(currentLang, 'step3_title')}</h3>
               <p>
-                Every officer verification, boundary alteration, and citizen inquiry is hash-chained with SHA-256 for complete tamper-evident auditability.
+                {t(currentLang, 'step3_desc')}
               </p>
               <div className="pipeline-feature-tags">
-                <span className="tag-pill">SHA-256 Chain</span>
-                <span className="tag-pill">Digital Signatures</span>
-                <span className="tag-pill">Role-Based Signoff</span>
+                <span className="tag-pill">{t(currentLang, 'step3_tag1')}</span>
+                <span className="tag-pill">{t(currentLang, 'step3_tag2')}</span>
+                <span className="tag-pill">{t(currentLang, 'step3_tag3')}</span>
               </div>
             </div>
           </div>
@@ -797,10 +804,10 @@ export default function LandingPage({ onLogin }) {
       <section className="content-section" id="gis">
         <div className="wrap">
           <div className="section-header-block reveal-on-scroll">
-            <span className="section-eyebrow">GEOSPATIAL INTELLIGENCE</span>
-            <h2 className="section-main-title">Interactive Cadastral GIS &amp; Boundary Analysis</h2>
+            <span className="section-eyebrow">{t(currentLang, 'gis_eyebrow')}</span>
+            <h2 className="section-main-title">{t(currentLang, 'gis_title')}</h2>
             <p className="section-description">
-              Explore georeferenced land boundaries, inspect subdivided survey plots, and verify title legitimacy in real-time.
+              {t(currentLang, 'gis_desc')}
             </p>
           </div>
 
@@ -814,10 +821,10 @@ export default function LandingPage({ onLogin }) {
       <section className="content-section section-alt-bg" id="validation">
         <div className="wrap">
           <div className="section-header-block reveal-on-scroll">
-            <span className="section-eyebrow">AUTOMATED CROSS-VALIDATION</span>
-            <h2 className="section-main-title">Multi-Registry Verification &amp; Discrepancy Detection</h2>
+            <span className="section-eyebrow">{t(currentLang, 'val_eyebrow')}</span>
+            <h2 className="section-main-title">{t(currentLang, 'val_title')}</h2>
             <p className="section-description">
-              Our validation engine compares scanned physical settlement deeds against digital revenue records, checking boundaries, encumbrances, and ownership consistency.
+              {t(currentLang, 'val_desc')}
             </p>
           </div>
 
@@ -826,7 +833,7 @@ export default function LandingPage({ onLogin }) {
             <div className="validation-doc-panel reveal-on-scroll stagger-1">
               <h4>
                 <span>📜</span>
-                <span>Archived Deed Document (OCR Parsed)</span>
+                <span>{t(currentLang, 'val_ocr_panel_title')}</span>
               </h4>
               <div className="deed-preview-box">
                 <p>
@@ -839,7 +846,7 @@ export default function LandingPage({ onLogin }) {
                 </p>
               </div>
               <div className="confidence-meter-row">
-                <span className="data-label">OCR Character Accuracy</span>
+                <span className="data-label">{t(currentLang, 'val_ocr_accuracy')}</span>
                 <div className="confidence-bar-track">
                   <div className="confidence-bar-fill" style={{ width: '96%' }}></div>
                 </div>
@@ -851,7 +858,7 @@ export default function LandingPage({ onLogin }) {
             <div className="validation-doc-panel reveal-on-scroll stagger-2">
               <h4>
                 <span>🛡️</span>
-                <span>GIS Cadastral Match &amp; Audit Trail</span>
+                <span>{t(currentLang, 'val_gis_panel_title')}</span>
               </h4>
               <div className="deed-preview-box">
                 <p>
@@ -864,7 +871,7 @@ export default function LandingPage({ onLogin }) {
                 </p>
               </div>
               <div className="confidence-meter-row">
-                <span className="data-label">Spatial Georeference Match</span>
+                <span className="data-label">{t(currentLang, 'val_gis_georef_match')}</span>
                 <div className="confidence-bar-track">
                   <div className="confidence-bar-fill" style={{ width: '92%' }}></div>
                 </div>
@@ -879,10 +886,10 @@ export default function LandingPage({ onLogin }) {
       <section className="content-section" id="use-cases">
         <div className="wrap">
           <div className="section-header-block reveal-on-scroll">
-            <span className="section-eyebrow">GOVERNMENT &amp; CITIZEN PORTALS</span>
-            <h2 className="section-main-title">Role-Based Access for Every Stakeholder</h2>
+            <span className="section-eyebrow">{t(currentLang, 'roles_eyebrow')}</span>
+            <h2 className="section-main-title">{t(currentLang, 'roles_title')}</h2>
             <p className="section-description">
-              Purpose-built dashboards with granular cryptographic access control for field officers, registrars, state nodal leaders, and citizens.
+              {t(currentLang, 'roles_desc')}
             </p>
           </div>
 
@@ -890,90 +897,90 @@ export default function LandingPage({ onLogin }) {
             {/* Citizen */}
             <div className="role-box-card reveal-on-scroll stagger-1">
               <div>
-                <span className="role-badge">PORTAL 01</span>
+                <span className="role-badge">{t(currentLang, 'portal1_badge')}</span>
                 <div className="role-icon-emoji">👤</div>
-                <h3>Citizen &amp; Landowner</h3>
+                <h3>{t(currentLang, 'portal1_title')}</h3>
                 <p>
-                  Search verified land records, view digitized boundary maps, download certified extract copies, and submit grievance requests.
+                  {t(currentLang, 'portal1_desc')}
                 </p>
               </div>
               <span className="role-action-link" onClick={() => handleOpenRegister('citizen')}>
-                Search &amp; Register →
+                {t(currentLang, 'portal1_link')}
               </span>
             </div>
 
             {/* Field Officer */}
             <div className="role-box-card reveal-on-scroll stagger-2">
               <div>
-                <span className="role-badge">PORTAL 02</span>
+                <span className="role-badge">{t(currentLang, 'portal2_badge')}</span>
                 <div className="role-icon-emoji">🔍</div>
-                <h3>Field Verification Officer</h3>
+                <h3>{t(currentLang, 'portal2_title')}</h3>
                 <p>
-                  Upload scanned historic records, review multi-lingual OCR extractions, georeference FMB sketches, and flag boundary disputes.
+                  {t(currentLang, 'portal2_desc')}
                 </p>
               </div>
               <span className="role-action-link" onClick={() => handleOpenRegister('operator')}>
-                Officer Access →
+                {t(currentLang, 'portal2_link')}
               </span>
             </div>
 
             {/* Tahsildar / Sub-Registrar */}
             <div className="role-box-card reveal-on-scroll stagger-3">
               <div>
-                <span className="role-badge">PORTAL 03</span>
+                <span className="role-badge">{t(currentLang, 'portal3_badge')}</span>
                 <div className="role-icon-emoji">⚖️</div>
-                <h3>Tahsildar / Sub-Registrar</h3>
+                <h3>{t(currentLang, 'portal3_title')}</h3>
                 <p>
-                  Review legal deeds, verify AI-suggested subdivisions, approve mutation requests, and digitally sign verified land certificates.
+                  {t(currentLang, 'portal3_desc')}
                 </p>
               </div>
               <span className="role-action-link" onClick={() => handleOpenRegister('registrar')}>
-                Tahsildar Portal →
+                {t(currentLang, 'portal3_link')}
               </span>
             </div>
 
             {/* District Admin */}
             <div className="role-box-card reveal-on-scroll stagger-4">
               <div>
-                <span className="role-badge">PORTAL 04</span>
+                <span className="role-badge">{t(currentLang, 'portal4_badge')}</span>
                 <div className="role-icon-emoji">🏛️</div>
-                <h3>District Administrator</h3>
+                <h3>{t(currentLang, 'portal4_title')}</h3>
                 <p>
-                  Oversee district-wide digitization velocity, manage officer allocations, analyze disputed parcels, and resolve escalation tickets.
+                  {t(currentLang, 'portal4_desc')}
                 </p>
               </div>
               <span className="role-action-link" onClick={() => handleOpenRegister('districtadmin')}>
-                District Console →
+                {t(currentLang, 'portal4_link')}
               </span>
             </div>
 
             {/* State Nodal Officer */}
             <div className="role-box-card reveal-on-scroll stagger-5">
               <div>
-                <span className="role-badge">PORTAL 05</span>
+                <span className="role-badge">{t(currentLang, 'portal5_badge')}</span>
                 <div className="role-icon-emoji">🏢</div>
-                <h3>DILRMP State Nodal Officer</h3>
+                <h3>{t(currentLang, 'portal5_title')}</h3>
                 <p>
-                  Monitor state-level modernization metrics, integrate state cadastral repositories, and manage regional governance configurations.
+                  {t(currentLang, 'portal5_desc')}
                 </p>
               </div>
               <span className="role-action-link" onClick={() => handleOpenRegister('statenodal')}>
-                State Dashboard →
+                {t(currentLang, 'portal5_link')}
               </span>
             </div>
 
             {/* Auditor & Compliance */}
             <div className="role-box-card reveal-on-scroll stagger-6">
               <div>
-                <span className="role-badge">PORTAL 06</span>
+                <span className="role-badge">{t(currentLang, 'portal6_badge')}</span>
                 <div className="role-icon-emoji">🧾</div>
-                <h3>Auditor &amp; Compliance</h3>
+                <h3>{t(currentLang, 'portal6_title')}</h3>
                 <p>
-                  Inspect SHA-256 cryptographic logs, verify deed mutation chain-of-custody, and generate compliance reports for regulatory scrutiny.
+                  {t(currentLang, 'portal6_desc')}
                 </p>
               </div>
               <span className="role-action-link" onClick={() => handleOpenRegister('auditor')}>
-                Audit Registry →
+                {t(currentLang, 'portal6_link')}
               </span>
             </div>
           </div>
@@ -985,38 +992,38 @@ export default function LandingPage({ onLogin }) {
         <div className="wrap">
           <div className="about-layout-grid">
             <div className="reveal-on-scroll stagger-1">
-              <span className="section-eyebrow">STANDARDS &amp; GOVERNANCE</span>
-              <h2 className="section-main-title">Closing the gap between fragile archives &amp; public trust</h2>
+              <span className="section-eyebrow">{t(currentLang, 'about_eyebrow')}</span>
+              <h2 className="section-main-title">{t(currentLang, 'about_title')}</h2>
               <p className="section-description" style={{ marginBottom: '24px' }}>
-                Built strictly in compliance with Digital India Land Records Modernization Programme (DILRMP) and National Spatial Data Infrastructure (NSDI) frameworks to eliminate land disputes.
+                {t(currentLang, 'about_desc')}
               </p>
 
               <div className="security-badge-grid">
                 <div className="sec-badge-item">
-                  <b>AES-256-GCM</b>
-                  <span>Military-grade record encryption at rest &amp; in transit</span>
+                  <b>{t(currentLang, 'sec1_title')}</b>
+                  <span>{t(currentLang, 'sec1_desc')}</span>
                 </div>
                 <div className="sec-badge-item">
-                  <b>SHA-256 Linked</b>
-                  <span>Cryptographic hash chains for tamper-evident tracking</span>
+                  <b>{t(currentLang, 'sec2_title')}</b>
+                  <span>{t(currentLang, 'sec2_desc')}</span>
                 </div>
                 <div className="sec-badge-item">
-                  <b>OGC Compliant</b>
-                  <span>Open Geospatial Consortium standard GIS layers</span>
+                  <b>{t(currentLang, 'sec3_title')}</b>
+                  <span>{t(currentLang, 'sec3_desc')}</span>
                 </div>
                 <div className="sec-badge-item">
-                  <b>Role-Based RBAC</b>
-                  <span>Strict zero-trust administrative governance</span>
+                  <b>{t(currentLang, 'sec4_title')}</b>
+                  <span>{t(currentLang, 'sec4_desc')}</span>
                 </div>
               </div>
             </div>
 
             <div className="audit-chain-visual reveal-on-scroll stagger-2">
-              <span className="section-eyebrow" style={{ marginBottom: '16px' }}>CRYPTOGRAPHIC AUDIT LOG</span>
+              <span className="section-eyebrow" style={{ marginBottom: '16px' }}>{t(currentLang, 'audit_log_title')}</span>
               
               <div className="chain-block">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <b className="chain-block-title">Block #89421 · Deed Ingestion</b>
+                  <b className="chain-block-title">{t(currentLang, 'audit_block1')}</b>
                   <span style={{ fontSize: '11px', color: '#64748b' }}>14:22:05 UTC</span>
                 </div>
                 <div className="hash-line">SHA-256: 4e9c7a82b3d1f054e...8f912c</div>
@@ -1024,7 +1031,7 @@ export default function LandingPage({ onLogin }) {
 
               <div className="chain-block">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <b className="chain-block-title">Block #89422 · GIS Geo-referencing</b>
+                  <b className="chain-block-title">{t(currentLang, 'audit_block2')}</b>
                   <span style={{ fontSize: '11px', color: '#64748b' }}>14:24:19 UTC</span>
                 </div>
                 <div className="hash-line">SHA-256: 7b21a8f93e4d0182c...9a41b2</div>
@@ -1032,8 +1039,8 @@ export default function LandingPage({ onLogin }) {
 
               <div className="chain-block">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <b className="chain-block-title">Block #89423 · Authority Approval</b>
-                  <span style={{ fontSize: '11px', color: '#047857', fontWeight: '700' }}>VERIFIED</span>
+                  <b className="chain-block-title">{t(currentLang, 'audit_block3')}</b>
+                  <span style={{ fontSize: '11px', color: '#047857', fontWeight: '700' }}>{t(currentLang, 'audit_status_verified')}</span>
                 </div>
                 <div className="hash-line">SHA-256: d83f1092e47b8a109...2c48e7</div>
               </div>
@@ -1052,49 +1059,49 @@ export default function LandingPage({ onLogin }) {
                   <StateEmblemIcon />
                 </div>
                 <div className="brand-titles">
-                  <span className="brand-main-title" style={{ fontSize: '13px' }}>Intelligent Land Record</span>
-                  <span className="brand-sub-title" style={{ fontSize: '11px' }}>Digitization &amp; Validation System</span>
-                  <span className="brand-badge" style={{ fontSize: '9px' }}>Govt. of India | MoRD</span>
+                  <span className="brand-main-title" style={{ fontSize: '13px' }}>NilOra</span>
+                  <span className="brand-sub-title" style={{ fontSize: '11px' }}>{t(currentLang, 'brand_sub_title')}</span>
+                  <span className="brand-badge" style={{ fontSize: '9px' }}>{t(currentLang, 'brand_badge')}</span>
                 </div>
               </div>
               <p className="footer-tagline">
-                An AI-assisted national land record digitization, GIS georeferencing, and public-access registry.
+                {t(currentLang, 'footer_tagline')}
               </p>
             </div>
 
             <div>
-              <h4 className="footer-col-title">Navigation</h4>
+              <h4 className="footer-col-title">{t(currentLang, 'footer_col_nav')}</h4>
               <ul className="footer-nav-list">
-                <li><a href="#home" onClick={(e) => { e.preventDefault(); scrollToId('home'); }}>Home</a></li>
-                <li><a href="#platform" onClick={(e) => { e.preventDefault(); scrollToId('platform'); }}>Platform</a></li>
-                <li><a href="#gis" onClick={(e) => { e.preventDefault(); scrollToId('gis'); }}>GIS Viewer</a></li>
-                <li><a href="#validation" onClick={(e) => { e.preventDefault(); scrollToId('validation'); }}>Validation</a></li>
+                <li><a href="#home" onClick={(e) => { e.preventDefault(); scrollToId('home'); }}>{t(currentLang, 'nav_home')}</a></li>
+                <li><a href="#platform" onClick={(e) => { e.preventDefault(); scrollToId('platform'); }}>{t(currentLang, 'nav_platform')}</a></li>
+                <li><a href="#gis" onClick={(e) => { e.preventDefault(); scrollToId('gis'); }}>{t(currentLang, 'nav_gis')}</a></li>
+                <li><a href="#validation" onClick={(e) => { e.preventDefault(); scrollToId('validation'); }}>{t(currentLang, 'nav_validation')}</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="footer-col-title">Portals</h4>
+              <h4 className="footer-col-title">{t(currentLang, 'footer_col_portals')}</h4>
               <ul className="footer-nav-list">
-                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenRegister('citizen'); }}>Citizen Portal</a></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenRegister('operator'); }}>Field Officer</a></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenRegister('registrar'); }}>Sub-Registrar</a></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenLogin(); }}>Official Login</a></li>
+                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenRegister('citizen'); }}>{t(currentLang, 'footer_citizen')}</a></li>
+                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenRegister('operator'); }}>{t(currentLang, 'footer_officer')}</a></li>
+                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenRegister('registrar'); }}>{t(currentLang, 'footer_registrar')}</a></li>
+                <li><a href="#" onClick={(e) => { e.preventDefault(); handleOpenLogin(); }}>{t(currentLang, 'footer_official_login')}</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="footer-col-title">Compliance</h4>
+              <h4 className="footer-col-title">{t(currentLang, 'footer_col_compliance')}</h4>
               <ul className="footer-nav-list">
-                <li><a href="#">DILRMP Guidelines</a></li>
-                <li><a href="#">NSDI Spatial Standards</a></li>
-                <li><a href="#">Security &amp; Privacy Policy</a></li>
-                <li><a href="#">Smart India Hackathon 2026</a></li>
+                <li><a href="#">{t(currentLang, 'footer_dilrmp')}</a></li>
+                <li><a href="#">{t(currentLang, 'footer_nsdi')}</a></li>
+                <li><a href="#">{t(currentLang, 'footer_privacy')}</a></li>
+                <li><a href="#">{t(currentLang, 'footer_sih')}</a></li>
               </ul>
             </div>
           </div>
 
           <div className="footer-bottom-bar">
-            © 2026 Intelligent Land Record Digitization &amp; Validation System · Ministry of Rural Development (MoRD) &amp; Govt. of India.
+            {t(currentLang, 'footer_copyright')}
           </div>
         </div>
       </footer>
@@ -1104,7 +1111,7 @@ export default function LandingPage({ onLogin }) {
         <div className="modal-backdrop" onClick={() => setShowSearchModal(false)}>
           <div className="modal-window" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Search Verified Land Records</h3>
+              <h3>{t(currentLang, 'search_modal_title')}</h3>
               <button className="btn-modal-close" onClick={() => setShowSearchModal(false)}>✕</button>
             </div>
             <div className="modal-content-body">
@@ -1115,7 +1122,7 @@ export default function LandingPage({ onLogin }) {
                 </svg>
                 <input 
                   type="text" 
-                  placeholder="Enter survey number (e.g. 143/2A), owner name, or village..."
+                  placeholder={t(currentLang, 'search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -1146,42 +1153,8 @@ export default function LandingPage({ onLogin }) {
                     </div>
                   ))
                 ) : (
-                  <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>No matching land records found.</p>
+                  <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>{t(currentLang, 'search_no_records')}</p>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Watch Demo ── */}
-      {showDemoModal && (
-        <div className="modal-backdrop" onClick={() => setShowDemoModal(false)}>
-          <div className="modal-window" style={{ maxWidth: '780px' }} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Platform Intelligence Demo Walkthrough</h3>
-              <button className="btn-modal-close" onClick={() => setShowDemoModal(false)}>✕</button>
-            </div>
-            <div className="modal-content-body">
-              <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(45,212,191,0.3)', marginBottom: '16px' }}>
-                <img 
-                  src={bgImage} 
-                  alt="Demo Preview" 
-                  style={{ width: '100%', height: '360px', objectFit: 'cover' }}
-                />
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(5, 19, 14, 0.65)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '20px' }}>
-                  <div className="pipeline-icon-box" style={{ width: '64px', height: '64px', fontSize: '32px', marginBottom: '12px' }}>
-                    ▶
-                  </div>
-                  <h4 style={{ color: '#ffffff', fontSize: '20px', margin: '0 0 8px 0' }}>Automated AI Land Digitization Pipeline</h4>
-                  <p style={{ color: '#cbd5e1', maxWidth: '460px', fontSize: '14px', margin: 0 }}>
-                    Watch how scanned settlement deeds are parsed with Indic OCR, matched with drone orthomosaics, and cryptographically committed.
-                  </p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button className="btn-login-ghost" onClick={() => setShowDemoModal(false)}>Close</button>
-                <button className="btn-primary-teal" onClick={() => { setShowDemoModal(false); handleOpenRegister('citizen'); }}>Get Started Now</button>
               </div>
             </div>
           </div>
