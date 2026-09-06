@@ -5,9 +5,14 @@ import {
   MapPin, Search, Bell, ChevronDown, ChevronRight, X, Download,
   Clock3, ShieldCheck, Flame, ExternalLink, Filter, ArrowUpRight,
   TrendingUp, TrendingDown, Users, Check, RefreshCw, Calendar,
-  Building2, Eye, ShieldAlert, ArrowRight, Layers, FileCheck, CheckCircle
+  Building2, Eye, ShieldAlert, ArrowRight, Layers, FileCheck, CheckCircle,
+  Sparkles
 } from 'lucide-react';
 import logoImg from '../../assets/logo.jpg';
+import ConflictGraphView from '../Conflict/ConflictGraphView';
+import ParcelVerificationCard from '../Parcel/ParcelVerificationCard';
+import DiscrepancyIntelligenceView from '../DiscrepancyIntelligence/DiscrepancyIntelligenceView';
+import '../DiscrepancyIntelligence/DiscrepancyIntelligence.css';
 
 /* =========================================================================
    MOCK DATA (Matching disadmin.png & District Admin Ecosystem)
@@ -173,9 +178,11 @@ const RECENT_ACTIVITIES = [
 export default function DistrictAdministratorDashboard({
   userName = 'District Administrator',
   onLogout = () => {},
-  addToast = () => {}
+  addToast = () => {},
+  initialParcelId = null
 }) {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedParcelId, setSelectedParcelId] = useState(initialParcelId);
   const [selectedDistrict, setSelectedDistrict] = useState('Coimbatore District');
   const [districtMenuOpen, setDistrictMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -294,11 +301,27 @@ export default function DistrictAdministratorDashboard({
             <div className="dis-nav-group">
               <span className="dis-nav-label">MAIN</span>
               <button
-                className={`dis-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-                onClick={() => setActiveTab('dashboard')}
+                className={`dis-nav-item ${activeTab === 'dashboard' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('dashboard'); setSelectedParcelId(null); }}
               >
                 <LayoutDashboard size={17} />
                 <span>Dashboard</span>
+              </button>
+              <button
+                className={`dis-nav-item ${activeTab === 'discrepancy_intelligence' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('discrepancy_intelligence'); setSelectedParcelId(null); }}
+              >
+                <Sparkles size={17} className="text-emerald" />
+                <span>Discrepancy Intelligence</span>
+                <span className="dis-item-badge green font-bold">AI</span>
+              </button>
+              <button
+                className={`dis-nav-item ${activeTab === 'conflicts' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('conflicts'); setSelectedParcelId(null); }}
+              >
+                <AlertTriangle size={17} />
+                <span>Conflict Graph</span>
+                <span className="dis-item-badge red">3</span>
               </button>
             </div>
 
@@ -306,24 +329,24 @@ export default function DistrictAdministratorDashboard({
             <div className="dis-nav-group">
               <span className="dis-nav-label">CASES</span>
               <button
-                className={`dis-nav-item ${activeTab === 'escalated' ? 'active' : ''}`}
-                onClick={() => setActiveTab('escalated')}
+                className={`dis-nav-item ${activeTab === 'escalated' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('escalated'); setSelectedParcelId(null); }}
               >
                 <FileText size={17} />
                 <span>Escalated to Me</span>
                 {escalations.length > 0 && <span className="dis-item-badge red">{escalations.length}</span>}
               </button>
               <button
-                className={`dis-nav-item ${activeTab === 'resolved' ? 'active' : ''}`}
-                onClick={() => setActiveTab('resolved')}
+                className={`dis-nav-item ${activeTab === 'resolved' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('resolved'); setSelectedParcelId(null); }}
               >
                 <CheckCircle2 size={17} />
                 <span>Resolved Disputes</span>
                 <span className="dis-item-badge green">{resolved.length}</span>
               </button>
               <button
-                className={`dis-nav-item ${activeTab === 'highpriority' ? 'active' : ''}`}
-                onClick={() => setActiveTab('highpriority')}
+                className={`dis-nav-item ${activeTab === 'highpriority' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('highpriority'); setSelectedParcelId(null); }}
               >
                 <AlertTriangle size={17} />
                 <span>High-Priority</span>
@@ -335,22 +358,22 @@ export default function DistrictAdministratorDashboard({
             <div className="dis-nav-group">
               <span className="dis-nav-label">ANALYTICS</span>
               <button
-                className={`dis-nav-item ${activeTab === 'progress' ? 'active' : ''}`}
-                onClick={() => setActiveTab('progress')}
+                className={`dis-nav-item ${activeTab === 'progress' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('progress'); setSelectedParcelId(null); }}
               >
                 <BarChart3 size={17} />
                 <span>District Progress</span>
               </button>
               <button
-                className={`dis-nav-item ${activeTab === 'comparison' ? 'active' : ''}`}
-                onClick={() => setActiveTab('comparison')}
+                className={`dis-nav-item ${activeTab === 'comparison' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('comparison'); setSelectedParcelId(null); }}
               >
                 <GitCompare size={17} />
                 <span>Tehsil Comparison</span>
               </button>
               <button
-                className={`dis-nav-item ${activeTab === 'errors' ? 'active' : ''}`}
-                onClick={() => setActiveTab('errors')}
+                className={`dis-nav-item ${activeTab === 'errors' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('errors'); setSelectedParcelId(null); }}
               >
                 <Clock3 size={17} />
                 <span>Error Stats</span>
@@ -361,8 +384,8 @@ export default function DistrictAdministratorDashboard({
             <div className="dis-nav-group">
               <span className="dis-nav-label">REPORTS</span>
               <button
-                className={`dis-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
-                onClick={() => setActiveTab('reports')}
+                className={`dis-nav-item ${activeTab === 'reports' && !selectedParcelId ? 'active' : ''}`}
+                onClick={() => { setActiveTab('reports'); setSelectedParcelId(null); }}
               >
                 <FileSpreadsheet size={17} />
                 <span>Generate Reports</span>
@@ -513,9 +536,43 @@ export default function DistrictAdministratorDashboard({
         </header>
 
         {/* ===================================================================
-            TAB 1: MAIN DASHBOARD VIEW (Exact match to disadmin.png)
+            PARCEL INVESTIGATION WORKSPACE (STEPS 2 - 5)
             =================================================================== */}
-        {activeTab === 'dashboard' && (
+        {selectedParcelId && (
+          <main className="dis-content-stage">
+            <ParcelVerificationCard
+              parcelId={selectedParcelId}
+              onBack={() => setSelectedParcelId(null)}
+              addToast={addToast}
+            />
+          </main>
+        )}
+
+        {/* ===================================================================
+            DISCREPANCY INTELLIGENCE ENGINE SUITE
+            =================================================================== */}
+        {!selectedParcelId && activeTab === 'discrepancy_intelligence' && (
+          <main className="dis-content-stage">
+            <DiscrepancyIntelligenceView
+              onNavigateToParcel={(id) => setSelectedParcelId(id)}
+              addToast={addToast}
+            />
+          </main>
+        )}
+
+        {/* ===================================================================
+            CONFLICT GRAPH & REAL MAP VIEW
+            =================================================================== */}
+        {!selectedParcelId && activeTab === 'conflicts' && (
+          <main className="dis-content-stage">
+            <ConflictGraphView onSelectParcel={(id) => setSelectedParcelId(id)} />
+          </main>
+        )}
+
+        {/* ===================================================================
+            TAB 1: MAIN DASHBOARD VIEW (EXACT ORIGINAL DASHBOARD)
+            =================================================================== */}
+        {!selectedParcelId && activeTab === 'dashboard' && (
           <main className="dis-content-stage">
             {/* Hero Row: Welcome Back + Date Card */}
             <div className="dis-hero-row">
@@ -635,6 +692,7 @@ export default function DistrictAdministratorDashboard({
                 </div>
               </div>
             </div>
+
 
             {/* Middle Section: Escalation Pipeline & Quick Actions */}
             <div className="dis-middle-grid">

@@ -14,12 +14,23 @@ function getInitialState() {
     const hash = window.location.hash.replace(/^#\/?/, '');
     if (hash && hash !== 'home') {
       const parts = hash.split('/');
+      if (parts[0] === 'parcels' && parts[1]) {
+        const pId = decodeURIComponent(parts[1]).replace(/-/g, '/');
+        return { view: 'dashboard', role: 'registrar', userName: 'Tahsildar', initialParcelId: pId };
+      }
       if (parts[0] === 'dashboard' && parts[1]) {
-        return { view: 'dashboard', role: parts[1], userName: parts[2] ? decodeURIComponent(parts[2]) : parts[1].toUpperCase() };
+        const role = parts[1];
+        let pId = null;
+        let uName = parts[2] ? decodeURIComponent(parts[2]) : role.toUpperCase();
+        if (parts[2] === 'parcels' && parts[3]) {
+          pId = decodeURIComponent(parts[3]).replace(/-/g, '/');
+          uName = role.toUpperCase();
+        }
+        return { view: 'dashboard', role, userName: uName, initialParcelId: pId };
       }
       const knownRoles = ['operator', 'registrar', 'citizen', 'districtadmin', 'auditor', 'statenodal', 'systemadmin', 'tahsildar', 'tehsildar', 'subregistrar'];
       if (knownRoles.includes(parts[0])) {
-        return { view: 'dashboard', role: parts[0], userName: parts[1] ? decodeURIComponent(parts[1]) : parts[0].toUpperCase() };
+        return { view: 'dashboard', role: parts[0], userName: parts[1] ? decodeURIComponent(parts[1]) : parts[0].toUpperCase(), initialParcelId: null };
       }
     }
     // If opening http://localhost:5173 directly with no dashboard hash, clear any stale dashboard session
@@ -27,12 +38,12 @@ function getInitialState() {
   } catch (e) {
     console.warn('[App] Failed to parse initial state:', e);
   }
-  return { view: 'landing', role: null, userName: null };
+  return { view: 'landing', role: null, userName: null, initialParcelId: null };
 }
 
 function App() {
   const [authState, setAuthState] = useState(getInitialState);
-  const { view, role, userName } = authState;
+  const { view, role, userName, initialParcelId } = authState;
   
   const [toasts, setToasts] = useState([]);
 
@@ -43,7 +54,7 @@ function App() {
         window.location.hash = `dashboard/${role}${userName ? `/${encodeURIComponent(userName)}` : ''}`;
       } else {
         localStorage.removeItem('land_record_auth');
-        if (window.location.hash.startsWith('#dashboard')) {
+        if (window.location.hash.startsWith('#dashboard') || window.location.hash.startsWith('#parcels')) {
           history.replaceState(null, '', window.location.pathname + window.location.search);
         }
       }
@@ -77,6 +88,7 @@ function App() {
       role: userRole,
       userName: name,
       view: 'dashboard',
+      initialParcelId: null,
     });
     addToast(`Welcome back! Logged in as ${name}.`, 'success');
   };
@@ -86,6 +98,7 @@ function App() {
       view: 'landing',
       role: null,
       userName: null,
+      initialParcelId: null,
     });
     addToast('You have been logged out.');
   };
@@ -100,13 +113,13 @@ function App() {
           <OperatorDashboard userName={userName || 'Operator'} onLogout={handleLogout} addToast={addToast} />
         )}
         {view === 'dashboard' && (role === 'registrar' || role === 'tahsildar' || role === 'tehsildar' || role === 'subregistrar') && (
-          <RegistrarDashboard userName={userName || 'Tahsildar'} onLogout={handleLogout} addToast={addToast} />
+          <RegistrarDashboard userName={userName || 'Tahsildar'} initialParcelId={initialParcelId} onLogout={handleLogout} addToast={addToast} />
         )}
         {view === 'dashboard' && role === 'citizen' && (
           <CitizenDashboard userName={userName || 'Citizen'} onLogout={handleLogout} addToast={addToast} />
         )}
         {view === 'dashboard' && role === 'districtadmin' && (
-          <DistrictAdministratorDashboard userName={userName || 'District Administrator'} onLogout={handleLogout} addToast={addToast} />
+          <DistrictAdministratorDashboard userName={userName || 'District Administrator'} initialParcelId={initialParcelId} onLogout={handleLogout} addToast={addToast} />
         )}
         {view === 'dashboard' && role === 'auditor' && (
           <AuditorDashboard userName={userName || 'Auditor'} onLogout={handleLogout} addToast={addToast} />

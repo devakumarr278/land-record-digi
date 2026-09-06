@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, UploadCloud, RefreshCw, PencilLine, Send,
   AlertTriangle, History, Settings as SettingsIcon, LogOut, ChevronsLeft, ChevronsRight,
